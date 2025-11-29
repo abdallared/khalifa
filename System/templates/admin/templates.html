@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "القوالب العامة" %}{% endblock %}
+{% block page_title %}{% trans "القوالب العامة" %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-file-alt"></i> {% trans "القوالب العامة" %}
+    </h4>
+    <button class="btn btn-primary" onclick="openModal('addTemplateModal')">
+        <i class="fas fa-plus"></i> {% trans "إضافة قالب جديد" %}
+    </button>
+</div>
+
+<!-- Templates Grid -->
+<div class="row g-4">
+    {% for template in templates %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">{{ template.name }}</h5>
+                    <span class="badge bg-primary">{{ template.category }}</span>
+                </div>
+                <p class="card-text text-muted" style="min-height: 80px;">{{ template.content|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> {{ template.created_at|date:"Y-m-d" }}
+                    </small>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate({{ template.id }})" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editTemplate({{ template.id }})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate({{ template.id }})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3 d-block"></i>
+                <p class="text-muted">{% trans "لا توجد قوالب حالياً" %}</p>
+                <button class="btn btn-primary" onclick="openModal('addTemplateModal')">
+                    <i class="fas fa-plus"></i> {% trans "إضافة قالب جديد" %}
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Template Modal -->
+<div class="modal" id="addTemplateModal" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i> {% trans "إضافة قالب جديد" %}
+                </h5>
+                <button type="button" class="btn-close" onclick="closeModal('addTemplateModal')"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTemplateForm">
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "عنوان القالب" %} *</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "التصنيف" %} *</label>
+                        <select class="form-select" name="category" required>
+                            <option value="greeting">{% trans "تحية" %}</option>
+                            <option value="inquiry">{% trans "استفسار" %}</option>
+                            <option value="order">{% trans "طلب" %}</option>
+                            <option value="complaint">{% trans "شكوى" %}</option>
+                            <option value="closing">{% trans "إغلاق" %}</option>
+                            <option value="other">{% trans "أخرى" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "المحتوى" %} *</label>
+                        <textarea class="form-control" name="content" rows="5" required></textarea>
+                        <small class="text-muted">{% trans "يمكنك استخدام {name} للإشارة لاسم الموظف المرسل" %}</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addTemplateModal')">
+                    <i class="fas fa-times"></i> {% trans "إلغاء" %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitAddTemplate()">
+                    <i class="fas fa-save"></i> {% trans "حفظ" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Template Modal -->
+<div class="modal" id="editTemplateModal" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> {% trans "تعديل القالب" %}
+                </h5>
+                <button type="button" class="btn-close" onclick="closeModal('editTemplateModal')"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTemplateForm">
+                    <input type="hidden" name="templateId" id="editTemplateId">
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "عنوان القالب" %} *</label>
+                        <input type="text" class="form-control" name="title" id="editTemplateTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "التصنيف" %} *</label>
+                        <select class="form-select" name="category" id="editTemplateCategory" required>
+                            <option value="greeting">{% trans "تحية" %}</option>
+                            <option value="inquiry">{% trans "استفسار" %}</option>
+                            <option value="order">{% trans "طلب" %}</option>
+                            <option value="complaint">{% trans "شكوى" %}</option>
+                            <option value="closing">{% trans "إغلاق" %}</option>
+                            <option value="other">{% trans "أخرى" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "المحتوى" %} *</label>
+                        <textarea class="form-control" name="content" id="editTemplateContent" rows="5" required></textarea>
+                        <small class="text-muted">{% trans "يمكنك استخدام {name} للإشارة لاسم الموظف المرسل" %}</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editTemplateModal')">
+                    <i class="fas fa-times"></i> {% trans "إلغاء" %}
+                </button>
+                <button type="button" class="btn btn-warning" onclick="submitEditTemplate()">
+                    <i class="fas fa-save"></i> {% trans "حفظ التعديلات" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 1.75rem auto;
+        max-width: 800px;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-start;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal Functions
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            // Remove dynamically created modals
+            if (modalId === 'viewTemplateModal') {
+                modal.remove();
+            }
+        }
+    }
+
+    async function viewTemplate(templateId) {
+        try {
+            // Fetch template data
+            const response = await fetch(`/api/global-templates/${templateId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch template data');
+            }
+
+            const template = await response.json();
+
+            // Create view modal
+            const modalContent = `
+                <div class="modal" id="viewTemplateModal" style="display: block;">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-eye"></i> View Template
+                                </h5>
+                                <button type="button" class="btn-close" onclick="closeModal('viewTemplateModal')"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Template Name</label>
+                                    <div class="form-control bg-light" readonly>${template.name}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Category</label>
+                                    <div class="form-control bg-light" readonly>
+                                        <span class="badge bg-primary">${template.category}</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Content</label>
+                                    <div class="form-control bg-light" style="min-height: 150px; white-space: pre-wrap;" readonly>${template.content}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Status</label>
+                                    <div class="form-control bg-light" readonly>
+                                        <span class="badge ${template.is_active ? 'bg-success' : 'bg-secondary'}">
+                                            ${template.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Created At</label>
+                                        <div class="form-control bg-light" readonly>${new Date(template.created_at).toLocaleString('en-US')}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Updated At</label>
+                                        <div class="form-control bg-light" readonly>${new Date(template.updated_at).toLocaleString('en-US')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeModal('viewTemplateModal')">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="closeModal('viewTemplateModal'); editTemplate(${templateId})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Error loading template', 'error');
+        }
+    }
+
+    async function editTemplate(templateId) {
+        try {
+            // جلب بيانات القالب
+            const response = await fetch(`/api/global-templates/${templateId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('فشل في جلب بيانات القالب');
+            }
+
+            const template = await response.json();
+
+            // ملء الحقول ببيانات القالب
+            document.getElementById('editTemplateId').value = template.id;
+            document.getElementById('editTemplateTitle').value = template.name;
+            document.getElementById('editTemplateCategory').value = template.category;
+            document.getElementById('editTemplateContent').value = template.content;
+
+            // فتح modal التعديل
+            openModal('editTemplateModal');
+
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ أثناء جلب بيانات القالب', 'error');
+        }
+    }
+
+    async function submitEditTemplate() {
+        const form = document.getElementById('editTemplateForm');
+        const templateId = document.getElementById('editTemplateId').value;
+        const formData = new FormData(form);
+
+        // التحقق من البيانات
+        if (!formData.get('title') || !formData.get('content')) {
+            khalifaPharmacy.showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/global-templates/${templateId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    name: formData.get('title'),
+                    content: formData.get('content'),
+                    category: formData.get('category'),
+                    is_active: true
+                })
+            });
+
+            if (response.ok) {
+                khalifaPharmacy.showToast('تم تعديل القالب بنجاح', 'success');
+                closeModal('editTemplateModal');
+                form.reset();
+                // إعادة تحميل الصفحة
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                const data = await response.json();
+                const errorMsg = data.error || data.detail || 'حدث خطأ أثناء تعديل القالب';
+                khalifaPharmacy.showToast(errorMsg, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+        }
+    }
+
+    async function deleteTemplate(templateId) {
+        if (!confirm('هل أنت متأكد من حذف هذا القالب؟')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/global-templates/${templateId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            if (response.ok) {
+                khalifaPharmacy.showToast('تم حذف القالب بنجاح', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                khalifaPharmacy.showToast('حدث خطأ أثناء حذف القالب', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+        }
+    }
+
+    async function submitAddTemplate() {
+        const form = document.getElementById('addTemplateForm');
+        const formData = new FormData(form);
+
+        // التحقق من البيانات
+        if (!formData.get('title') || !formData.get('content')) {
+            khalifaPharmacy.showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/global-templates/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    name: formData.get('title'),
+                    content: formData.get('content'),
+                    category: formData.get('category'),
+                    is_active: true
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                khalifaPharmacy.showToast('تم إضافة القالب بنجاح', 'success');
+                closeModal('addTemplateModal');
+                form.reset();
+                // إعادة تحميل الصفحة
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                const errorMsg = data.error || data.detail || 'حدث خطأ أثناء إضافة القالب';
+                khalifaPharmacy.showToast(errorMsg, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+        }
+    }
+</script>
+{% endblock %}
+

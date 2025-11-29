@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "الإعدادات" %}{% endblock %}
+{% block page_title %}{% trans "الإعدادات" %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-cog"></i> {% trans "إعدادات النظام" %}
+    </h4>
+</div>
+
+<div class="row g-4">
+
+    <!-- System Settings -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h"></i> {% trans "إعدادات النظام" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="systemSettingsForm">
+                    
+                    <!-- Auto Assignment -->
+                    <div class="mb-3">
+                        <label class="form-label">Auto Assignment Algorithm</label>
+                        <div class="form-control bg-light" style="cursor: not-allowed;">
+                            <i class="fas fa-balance-scale text-primary"></i> 
+                            <strong>Least Loaded</strong>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Customers are automatically distributed to the agent with the least workload
+                        </small>
+                    </div>
+                    
+                    <!-- Delay Threshold -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "عتبة التأخير (بالدقائق)" %}</label>
+                        <input type="number" class="form-control" name="delay_threshold" value="3" min="1">
+                        <small class="text-muted">{% trans "الوقت المسموح قبل اعتبار التذكرة متأخرة" %}</small>
+                    </div>
+                    
+                    <!-- Max Capacity -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "السعة القصوى الافتراضية للموظف" %}</label>
+                        <input type="number" class="form-control" name="default_max_capacity" value="10" min="1">
+                    </div>
+
+                    <!-- Save Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% trans "حفظ الإعدادات" %}
+                        </button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Database Backup -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database"></i> Database Backup
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="backupInfo" class="mb-3">
+                    <p class="text-muted">Last Backup: <strong id="lastBackupDate">Loading...</strong></p>
+                    <p class="text-muted">Available Backups: <strong id="backupCount">0</strong></p>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="createBackup()">
+                        <i class="fas fa-download"></i> Create Backup
+                    </button>
+                    <button class="btn btn-primary" onclick="showBackupsList()">
+                        <i class="fas fa-list"></i> View Backups
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Check WhatsApp connection status on page load
+
+    async function createBackup() {
+        try {
+            khalifaPharmacy.showToast('Creating backup...', 'info');
+
+            const response = await fetch('/api/backup/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                khalifaPharmacy.showToast('Backup created successfully', 'success');
+                loadBackupInfo();
+            } else {
+                khalifaPharmacy.showToast(result.error || 'Failed to create backup', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            khalifaPharmacy.showToast('Error creating backup', 'error');
+        }
+    }
+
+    async function loadBackupInfo() {
+        try {
+            const response = await fetch('/api/backup/list/');
+            const result = await response.json();
+
+            if (result.success && result.backups.length > 0) {
+                const lastBackup = result.backups[0];
+                document.getElementById('lastBackupDate').textContent = lastBackup.created_at;
+                document.getElementById('backupCount').textContent = result.total;
+            } else {
+                document.getElementById('lastBackupDate').textContent = 'No backups yet';
+                document.getElementById('backupCount').textContent = '0';
+            }
+        } catch (error) {
+            console.error('Error loading backup info:', error);
+        }
+    }
+
+    async function showBackupsList() {
+        try {
+            const response = await fetch('/api/backup/list/');
+            const result = await response.json();
+
+            if (!result.success) {
+                khalifaPharmacy.showToast('Failed to load backups list', 'error');
+                return;
+            }
+
+            if (result.backups.length === 0) {
+                khalifaPharmacy.showToast('No backups available', 'info');
+                return;
+            }
+
+            // Create Modal to display backups
+            let backupsHTML = '';
+            result.backups.forEach(backup => {
+                backupsHTML += `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${backup.filename}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> ${backup.created_at} |
+                                        <i class="fas fa-hdd"></i> ${backup.size_mb} MB |
+                                        <i class="fas fa-user"></i> ${backup.created_by}
+                                    </small>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-success" onclick="restoreBackup('${backup.filename}')">
+                                        <i class="fas fa-upload"></i> Restore
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteBackup('${backup.filename}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const modalHTML = `
+                <div class="modal" id="backupsModal" style="display: block; background: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-database"></i> Available Backups
+                                </h5>
+                                <button type="button" class="btn-close" onclick="closeBackupsModal()"></button>
+                            </div>
+                            <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                                ${backupsHTML}
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="closeBackupsModal()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        } catch (error) {
+            console.error('Error showing backups list:', error);
+            khalifaPharmacy.showToast('Error loading backups list', 'error');
+        }
+    }
+
+    function closeBackupsModal() {
+        const modal = document.getElementById('backupsModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    async function restoreBackup(filename) {
+        if (!confirm(`Are you sure you want to restore this backup?\n\nCurrent data will be replaced with data from:\n${filename}\n\nWarning: This action cannot be undone!`)) {
+            return;
+        }
+
+        try {
+            khalifaPharmacy.showToast('Restoring backup...', 'info');
+
+            const response = await fetch('/api/backup/restore/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ filename: filename })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                khalifaPharmacy.showToast('Backup restored successfully. Reloading page...', 'success');
+                closeBackupsModal();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                khalifaPharmacy.showToast(result.error || 'Failed to restore backup', 'error');
+            }
+        } catch (error) {
+            console.error('Error restoring backup:', error);
+            khalifaPharmacy.showToast('Error restoring backup', 'error');
+        }
+    }
+
+    async function deleteBackup(filename) {
+        if (!confirm(`Are you sure you want to delete this backup?\n\n${filename}`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/backup/delete/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ filename: filename })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                khalifaPharmacy.showToast('Backup deleted successfully', 'success');
+                closeBackupsModal();
+                showBackupsList();
+                loadBackupInfo();
+            } else {
+                khalifaPharmacy.showToast(result.error || 'Failed to delete backup', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting backup:', error);
+            khalifaPharmacy.showToast('Error deleting backup', 'error');
+        }
+    }
+    
+    // Load current settings
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/settings/');
+            const result = await response.json();
+            
+            console.log('Loaded settings:', result);
+            
+            // Handle both array and single object response
+            const settings = Array.isArray(result) ? result[0] : result;
+            
+            if (settings) {
+                const delayInput = document.querySelector('[name="delay_threshold"]');
+                const capacityInput = document.querySelector('[name="default_max_capacity"]');
+                
+                if (delayInput) delayInput.value = settings.delay_threshold_minutes || 3;
+                if (capacityInput) capacityInput.value = settings.default_max_capacity || 10;
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            khalifaPharmacy.showToast('Error loading settings', 'error');
+        }
+    }
+    
+    // Form submission
+    document.getElementById('systemSettingsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const delayValue = document.querySelector('[name="delay_threshold"]').value;
+        const capacityValue = document.querySelector('[name="default_max_capacity"]').value;
+        
+        const formData = {
+            delay_threshold_minutes: parseInt(delayValue),
+            default_max_capacity: parseInt(capacityValue)
+        };
+        
+        console.log('Saving settings:', formData);
+        
+        try {
+            const response = await fetch('/api/settings/1/', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            console.log('Save response:', result);
+            
+            if (response.ok) {
+                khalifaPharmacy.showToast('Settings saved successfully', 'success');
+                loadSettings(); // Reload to confirm
+            } else {
+                khalifaPharmacy.showToast(result.error || 'Failed to save settings', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            khalifaPharmacy.showToast('Error saving settings', 'error');
+        }
+    });
+    
+    // Load settings on page load
+    loadSettings();
+
+    // Load backup info on page load
+    loadBackupInfo();
+</script>
+{% endblock %}
+

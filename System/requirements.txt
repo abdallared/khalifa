@@ -1,0 +1,143 @@
+# ============================================================================
+# Requirements.txt - Khalifa Pharmacy Conversation Management System
+# نظام إدارة محادثات صيدليات خليفة
+# ============================================================================
+# Created by: محمد فارس - AI Software Engineer
+# Updated: 2025-11-25
+# PostgreSQL Production-Ready Configuration
+# ============================================================================
+
+# ============================================================================
+# Core Django Framework
+# ============================================================================
+Django==4.2.7
+djangorestframework==3.14.0
+asgiref==3.11.0
+sqlparse==0.5.3
+
+# ============================================================================
+# Database Drivers - PostgreSQL (Production)
+# ============================================================================
+psycopg==3.2.13
+psycopg-binary==3.2.13
+
+# Alternative PostgreSQL driver (if psycopg3 has issues):
+# psycopg2-binary==2.9.9
+
+# For MySQL (Production - if switching from PostgreSQL):
+# mysqlclient==2.2.0
+
+# ============================================================================
+# Environment & Configuration
+# ============================================================================
+python-dotenv==1.0.0
+
+# ============================================================================
+# Date & Time Utilities
+# ============================================================================
+python-dateutil==2.8.2
+pytz==2024.1
+tzdata==2025.2
+
+# ============================================================================
+# HTTP Requests & API Integration
+# ============================================================================
+requests==2.31.0
+urllib3==2.1.0
+certifi==2025.11.12
+charset-normalizer==3.4.4
+idna==3.11
+
+# ============================================================================
+# Image Processing & Media Handling
+# ============================================================================
+Pillow==12.0.0
+
+# ============================================================================
+# CORS Headers (for API access from frontend)
+# ============================================================================
+django-cors-headers==4.3.1
+
+# ============================================================================
+# Python Utilities
+# ============================================================================
+six==1.17.0
+
+# ============================================================================
+# Background Tasks & Queue Management (Optional - للمرحلة المتقدمة)
+# ============================================================================
+# celery==5.3.4
+# redis==5.0.1
+
+# ============================================================================
+# WebSocket Support (Optional - للمرحلة المتقدمة)
+# ============================================================================
+# channels==4.0.0
+# channels-redis==4.1.0
+# daphne==4.0.0
+
+# ============================================================================
+# Testing & Development Tools (Optional)
+# ============================================================================
+# pytest==7.4.3
+# pytest-django==4.7.0
+# factory-boy==3.3.0
+
+# ============================================================================
+# Code Quality & Linting (Optional)
+# ============================================================================
+# flake8==6.1.0
+# black==23.12.1
+# isort==5.13.2
+
+# ============================================================================
+# Security & Authentication (Optional - للمرحلة المتقدمة)
+# ============================================================================
+# djangorestframework-simplejwt==5.3.1
+# django-guardian==2.4.0
+
+# ============================================================================
+# Monitoring & Logging (Optional)
+# ============================================================================
+# sentry-sdk==1.39.2
+
+# ============================================================================
+# Excel & Data Export (Optional)
+# ============================================================================
+# openpyxl==3.1.2
+# pandas==2.1.4
+
+# ============================================================================
+# Installation Instructions:
+# ============================================================================
+# 1. Create virtual environment:
+#    python -m venv venv
+#
+# 2. Activate virtual environment:
+#    Windows: venv\Scripts\activate
+#    Linux/Mac: source venv/bin/activate
+#
+# 3. Install all requirements:
+#    pip install -r requirements.txt
+#
+# 4. Setup environment variables:
+#    Copy .env.example to .env and configure your database settings
+#
+# 5. Run migrations:
+#    python manage.py migrate
+#
+# 6. Create superuser:
+#    python manage.py createsuperuser
+#
+# 7. Run development server:
+#    python manage.py runserver
+#
+# ============================================================================
+# Notes:
+# ============================================================================
+# - This configuration is tested and working with PostgreSQL 18.1
+# - All dependencies are pinned to specific versions for stability
+# - psycopg3 is used instead of psycopg2 for better PostgreSQL support
+# - System supports both SQLite (development) and PostgreSQL (production)
+# - Make sure PostgreSQL service is running before starting the application
+# ============================================================================

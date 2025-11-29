@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "لوحة التحكم" %}{% endblock %}
+{% block page_title %}{% trans "لوحة التحكم" %}{% endblock %}
+
+{% block content %}
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    
+    <!-- Available Agents Now -->
+    <div class="col-md-4">
+        <div class="card stat-card bg-success-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark mb-2 fw-bold">Available Agents Now</h6>
+                        <h2 class="mb-0 text-success">{{ available_agents_count }}</h2>
+                    </div>
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Customers -->
+    <div class="col-md-4">
+        <div class="card stat-card bg-info-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark mb-2 fw-bold">Active Customers</h6>
+                        <h2 class="mb-0 text-info">{{ active_customers }}</h2>
+                    </div>
+                    <div class="stat-icon bg-info">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delayed Tickets -->
+    <div class="col-md-4">
+        <div class="card stat-card bg-danger-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark mb-2 fw-bold">Delayed Tickets</h6>
+                        <h2 class="mb-0 text-danger">{{ delayed_tickets }}</h2>
+                    </div>
+                    <div class="stat-icon bg-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Tickets Status -->
+<div class="row g-4 mb-4">
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-folder-open fa-3x text-warning"></i>
+                </div>
+                <h3 class="mb-2">{{ open_tickets }}</h3>
+                <p class="text-muted mb-0">{% trans "تذاكر مفتوحة" %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-clock fa-3x text-info"></i>
+                </div>
+                <h3 class="mb-2">{{ pending_tickets }}</h3>
+                <p class="text-muted mb-0">{% trans "تذاكر معلقة" %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                </div>
+                <h3 class="mb-2">{{ closed_tickets }}</h3>
+                <p class="text-muted mb-0">{% trans "تذاكر مغلقة" %}</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Recent Tickets -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-ticket-alt"></i> {% trans "آخر التذاكر" %}
+                </h5>
+                <a href="{% url 'admin-tickets' %}" class="btn btn-sm btn-primary">
+                    {% trans "عرض الكل" %} <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{% trans "رقم التذكرة" %}</th>
+                                <th>{% trans "العميل" %}</th>
+                                <th>{% trans "الموظف المعين" %}</th>
+                                <th>{% trans "الحالة" %}</th>
+                                <th>{% trans "الأولوية" %}</th>
+                                <th>{% trans "تاريخ الإنشاء" %}</th>
+                                <th>{% trans "الإجراءات" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in recent_tickets %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ ticket.id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            {{ ticket.customer.name|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <div>{{ ticket.customer.name }}</div>
+                                            <small class="text-muted">{{ ticket.customer.phone_number }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if ticket.assigned_agent %}
+                                        {{ ticket.assigned_agent.user.get_full_name|default:ticket.assigned_agent.user.username }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "غير معين" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ticket.status == 'open' %}
+                                        <span class="badge bg-warning">{% trans "مفتوحة" %}</span>
+                                    {% elif ticket.status == 'pending' %}
+                                        <span class="badge bg-info">{% trans "معلقة" %}</span>
+                                    {% elif ticket.status == 'closed' %}
+                                        <span class="badge bg-success">{% trans "مغلقة" %}</span>
+                                    {% endif %}
+                                    
+                                    {% if ticket.is_delayed %}
+                                        <span class="badge bg-danger ms-1">{% trans "متأخرة" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ticket.priority == 'high' %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% elif ticket.priority == 'medium' %}
+                                        <span class="badge bg-success-dark">Medium</span>
+                                    {% elif ticket.priority == 'normal' %}
+                                        <span class="badge bg-primary">Normal</span>
+                                    {% elif ticket.priority == 'low' %}
+                                        <span class="badge bg-secondary">Low</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">{{ ticket.priority }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ ticket.created_at|date:"Y-m-d H:i"|default:"-" }}</small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTicket({{ ticket.id }})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    {% trans "لا توجد تذاكر حالياً" %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom badge color for medium priority */
+    .badge.bg-success-dark {
+        background-color: #2d6a4f !important;
+        color: white !important;
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        transition: var(--transition-fast);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .avatar-sm {
+        width: 35px;
+        height: 35px;
+        font-size: 0.875rem;
+    }
+    
+    .bg-primary-light {
+        background-color: rgba(44, 95, 45, 0.1);
+    }
+    
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+    
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    /* Agent Card Styles */
+    .agent-card {
+        background: white;
+        border: 2px solid #e8f5e9;
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+        height: 100%;
+    }
+    
+    .agent-card:hover {
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.2);
+        transform: translateY(-4px);
+        border-color: #28a745;
+    }
+    
+    .avatar-md {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .agent-info-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .agent-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+    
+    .agent-info-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .agent-info-item i {
+        width: 16px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    async function viewTicket(ticketId) {
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}/`);
+            const ticket = await response.json();
+
+            if (response.ok) {
+                const statusMap = {
+                    'open': 'Open',
+                    'pending': 'Pending',
+                    'in_progress': 'In Progress',
+                    'closed': 'Closed'
+                };
+
+                const categoryMap = {
+                    'general': 'General',
+                    'technical': 'Technical',
+                    'billing': 'Billing',
+                    'complaint': 'Complaint',
+                    'medicine_order': 'Medicine Order',
+                    'follow_up': 'Follow Up'
+                };
+
+                const priorityMap = {
+                    'low': 'Low',
+                    'medium': 'Medium',
+                    'normal': 'Normal',
+                    'high': 'High'
+                };
+
+                let statusBadgeClass = 'info';
+                if (ticket.status === 'open') statusBadgeClass = 'warning';
+                else if (ticket.status === 'closed') statusBadgeClass = 'success';
+                
+                let priorityBadgeClass = 'primary';
+                if (ticket.priority === 'high') priorityBadgeClass = 'danger';
+                else if (ticket.priority === 'low') priorityBadgeClass = 'secondary';
+                
+                const modalContent = '<div class="modal" id="viewTicketModal" style="display: block;">' +
+                    '<div class="modal-dialog modal-lg">' +
+                        '<div class="modal-content">' +
+                            '<div class="modal-header">' +
+                                '<h5 class="modal-title">Ticket Details #' + ticket.id + '</h5>' +
+                                '<button type="button" class="btn-close" onclick="closeModal(\'viewTicketModal\')"></button>' +
+                            '</div>' +
+                            '<div class="modal-body">' +
+                                '<table class="table">' +
+                                    '<tr><th>Ticket Number:</th><td>' + ticket.ticket_number + '</td></tr>' +
+                                    '<tr><th>Customer:</th><td>' + ticket.customer_name + ' (' + ticket.customer_phone + ')</td></tr>' +
+                                    '<tr><th>Assigned Agent:</th><td>' + (ticket.assigned_agent_name || '-') + '</td></tr>' +
+                                    '<tr><th>Current Agent:</th><td>' + (ticket.current_agent_name || '-') + '</td></tr>' +
+                                    '<tr><th>Status:</th><td><span class="badge bg-' + statusBadgeClass + '">' + (statusMap[ticket.status] || ticket.status) + '</span></td></tr>' +
+                                    '<tr><th>Category:</th><td>' + (categoryMap[ticket.category] || ticket.category) + '</td></tr>' +
+                                    '<tr><th>Priority:</th><td><span class="badge bg-' + priorityBadgeClass + '">' + (priorityMap[ticket.priority] || ticket.priority) + '</span></td></tr>' +
+                                    '<tr><th>Messages Count:</th><td>' + ticket.messages_count + '</td></tr>' +
+                                    '<tr><th>Created Date:</th><td>' + new Date(ticket.created_at).toLocaleString('en-US') + '</td></tr>' +
+                                    (ticket.closed_at ? '<tr><th>Closed Date:</th><td>' + new Date(ticket.closed_at).toLocaleString('en-US') + '</td></tr>' : '') +
+                                    (ticket.closure_reason ? '<tr><th>Closure Reason:</th><td>' + ticket.closure_reason + '</td></tr>' : '') +
+                                '</table>' +
+                            '</div>' +
+                            '<div class="modal-footer">' +
+                                '<button class="btn btn-secondary" onclick="closeModal(\'viewTicketModal\')">Close</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+                document.body.insertAdjacentHTML('beforeend', modalContent);
+            } else {
+                if (typeof khalifaPharmacy !== 'undefined') {
+                    khalifaPharmacy.showToast('Error fetching ticket data', 'error');
+                } else {
+                    alert('Error fetching ticket data');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            if (typeof khalifaPharmacy !== 'undefined') {
+                khalifaPharmacy.showToast('Error connecting to server', 'error');
+            } else {
+                alert('Error connecting to server');
+            }
+        }
+    }
+</script>
+{% endblock %}
+

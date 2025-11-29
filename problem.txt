@@ -1,0 +1,156 @@
+??  Redis is optional - skipping for now
+?? Starting WhatsApp Client... (Attempt 1/3)
+info:     [khalifa-pharmacy:browser] Using browser folder 'D:\khalefa_Whats\wppconnect-server\tokens\khalifa-pharmacy'
+info:     [khalifa-pharmacy:browser] Initializing browser...
+
+==================================================
+?? WPPConnect Server Started!
+==================================================
+?? Server: http://localhost:3000
+?? Session: khalifa-pharmacy
+?? Django Backend: http://127.0.0.1:8000
+==================================================
+
+http:     [khalifa-pharmacy:browser] checking headless...
+http:     [khalifa-pharmacy:browser] headless option is active, browser hidden
+info:     [khalifa-pharmacy:client] Initializing...
+verbose:  [khalifa-pharmacy:client] Setting WhatsApp WEB version to 2.3000.10294x
+verbose:  [khalifa-pharmacy:client] Loading WhatsApp WEB
+verbose:  [khalifa-pharmacy:page] Page loaded
+verbose:  [khalifa-pharmacy:client] Injecting wapi.js
+verbose:  [khalifa-pharmacy:client] WhatsApp WEB loaded
+http:     [khalifa-pharmacy:client] Waiting page load
+verbose:  [khalifa-pharmacy:client] wapi.js injected
+debug:    [khalifa-pharmacy:client] Exposing onMessage function
+debug:    [khalifa-pharmacy:client] Exposing onAnyMessage function
+http:     [khalifa-pharmacy:client] Checking is logged...
+info:     [khalifa-pharmacy:client] WhatsApp WEB version: 2.3000.1029492367
+info:     [khalifa-pharmacy:client] WA-JS version: 3.18.8
+http:     [khalifa-pharmacy:client] Authenticated
+?? Status: isLogged
+? WhatsApp Connected!
+debug:    [khalifa-pharmacy:client] Exposing onAck function
+info:     [khalifa-pharmacy:client] Auto close configured to 180s
+http:     [khalifa-pharmacy:client] Checking phone is connected...
+debug:    [khalifa-pharmacy:client] Exposing onMessageEdit function
+debug:    [khalifa-pharmacy:client] Exposing onNotificationMessage function
+debug:    [khalifa-pharmacy:client] Exposing onParticipantsChanged function
+debug:    [khalifa-pharmacy:client] Exposing onStateChange function
+debug:    [khalifa-pharmacy:client] Exposing onStreamChange function
+debug:    [khalifa-pharmacy:client] Registering onStateChange event
+debug:    [khalifa-pharmacy:client] Registering onMessage event
+debug:    [khalifa-pharmacy:client] Registering onStateChange event
+? WhatsApp Client Started Successfully!
+debug:    [khalifa-pharmacy:client] Exposing onIncomingCall function
+debug:    [khalifa-pharmacy:client] Exposing onInterfaceChange function
+debug:    [khalifa-pharmacy:client] Exposing onPresenceChanged function
+debug:    [khalifa-pharmacy:client] Exposing onLiveLocation function
+debug:    [khalifa-pharmacy:client] Exposing onAddedToGroup function
+debug:    [khalifa-pharmacy:client] Exposing onRevokedMessage function
+debug:    [khalifa-pharmacy:client] Exposing onReactionMessage function
+debug:    [khalifa-pharmacy:client] Exposing onPollResponse function
+debug:    [khalifa-pharmacy:client] Exposing onUpdateLabel function
+debug:    [khalifa-pharmacy:client] Exposing onOrderStatusUpdate function
+debug:    [khalifa-pharmacy:client] Emitting onStateChange event (2 registered)
+?? State Changed: UNLAUNCHED
+debug:    [khalifa-pharmacy:client] Emitting onInterfaceChange event (1 registered)
+http:     [khalifa-pharmacy:client] Current state: SYNCING (CONNECTING)
+info:     [khalifa-pharmacy:session] Session Unpaired
+?? Status: desconnectedMobile
+??  Mobile disconnected
+verbose:  [khalifa-pharmacy:page] Page loaded
+verbose:  [khalifa-pharmacy:client] Injecting wapi.js
+ProtocolError: Protocol error (DOM.describeNode): Cannot find context with specified id
+    at <instance_members_initializer> (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\common\CallbackRegistry.js:102:14)
+    at new Callback (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\common\CallbackRegistry.js:106:16)
+    at CallbackRegistry.create (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\common\CallbackRegistry.js:24:26)
+    at Connection._rawSend (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Connection.js:99:26)
+    at CdpCDPSession.send (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\CdpSession.js:73:33)
+    at IsolatedWorld.transferHandle (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\IsolatedWorld.js:137:40)
+    at CdpFrame.addScriptTag (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Frame.js:666:43)
+    at async CdpPage.addScriptTag (D:\khalefa_Whats\wppconnect-server\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:538:20)
+verbose:  [khalifa-pharmacy:client] wapi.js failed
+error:    [khalifa-pharmacy:client] ProtocolError: Protocol error (DOM.describeNode): Cannot find context with specified id
+verbose:  [khalifa-pharmacy:page] Page loaded
+verbose:  [khalifa-pharmacy:client] Injecting wapi.js
+verbose:  [khalifa-pharmacy:client] wapi.js injected
+info:     [khalifa-pharmacy:client] WhatsApp WEB version: 2.3000.1030229311
+info:     [khalifa-pharmacy:client] WA-JS version: 3.18.8
+info:     [khalifa-pharmacy:client] Waiting for QRCode Scan (Attempt 1)...:
+_______________________________________________________________
+¦ _____ ¦_  ¦_¯¦¦ _¦_¦¦¦¦_¯¯¯¦¯¯¯ ¦¦¯ _¦¦___¯_¦¯¦¯¦¦  ¦ _____ ¦
+¦ ¦   ¦ ¦  _¯¦¯¦ ¯¯ _ __¯¯¯_¯¦_¯ ¯¦_ ¯ _¯_¯¦¦_   ¯  _ ¦ ¦   ¦ ¦
+¦ ¦___¦ ¦_¯_¯_¯_ ¦_¦  ¦_¯¯¦¯_ ___ ¯¯¯¯ __¯¯¦¯  ¯_¦¦ _¦¦ ¦___¦ ¦
+¦_______¦_¦_¦ ¦ ¦ ¦_¯_¯ ¯_¦_¯ ¦_¦ ¯ ¯_¯_¦_¦_¦_¦_¦_¯ ¦ ¦_______¦
+¦  __¦¦_¯_ _   ¯__¯¯ ¯__¦ ¦_ _   _¯__¯ ¦ _ ¯¯¯__ ¯¦¦___¯¯ __¯_¦
+¦¦¦_   _¦¦ _ ¯¦¯_  _¦¯¦¯_ ¦¯_¯¯_¦__ ¦¦¦¯¯¯__¯¯_¦¯¯¦¯ ¯  _¦¯ ¦¦¦
+¦¯¯¦_¦ _¯_¦_¦¯ ¦ ¦¦ ¯¯¦¯_¦ ¦¦¦¦ ¯¯¯_ ¯¯_¯¦___¦ ___  ___¦ ¦ _¦¯¦
+¦¦¦ ¦¦ _¯¯__¦  ¦_¯¦_ ¯ ¯  ¯ _¦¯_¦¯¯¯_  ¦  ¯ ¦¦¦¦¦_¯__¯____ ¦¯¦¦
+¦_¦¦¦¯ __¦_ ¯¦¦__¯¦¦___  ¯__¯¦_¯¯   ¯¯__ ¯ ¦_   ¯¦_¦¯ ¯__ ¦  _¦
+¦¯¯___ _ _ _¦¯  ¦¦¦¯ ¯¦ ¦¯ ¦¯¦¯__¯¯¯¯¦    __¦¯¦_¦¦  ¯¯¯_¦¦¦¦__¦
+¦¯¦¯¦¦___¦ ¦¦¦¦ ¦_ ¯ _ __ ¯¦__ _¦¯¦¯ ¯ ¦¯_¯¯¦¯ ¦_¦¯__¦¯¯¦¯_¦¦¦¦
+¦¦ ¦ ¦ _ ¦ ¦_¦¦   ¦ _ ¦__¯¦_¯  ¦ _¦¯ _¦¯ _¯¦  ¯  ¯¦ ¯     ¯¯¦¦¦
+¦¯¯¯¯ ¯_¯¯ __¯_¦¯¦ ¦_¯¦¦__¯¯¦¯¯¯_ ¯¦ _  _¯¦__¦ ¦_   ¦__¦¦¦¦   ¦
+¦¯ ¯ ¯¦_  ¯_  __¦_ ¯¦¦_ ¦ _ ¦  ¯¦  ¯ ¯__¦¯_¦¦__¦¯¦¯_  _ _  _ ¯¦
+¦   ¯ ___  ¯¦¯_ ¦ ¦¯¯¦_¦ ¦¦ ¯ ___  ¯ ¦ _ ¯ ___¯  ¦_¦¦ ___  _¦¯¦
+¦¯  ¯ ¦_¦ _ ¦ __¯ __ ¦ ¦¯¯ ¦¯ ¦_¦ ¯¦¯ _¯¦    ¯¦¦ ¯¦_¦ ¦_¦ ¯_ _¦
+¦ ¦__  _  ¦   ¯ ¦ ¯¦¯¦¦__¯ ¯¦  _  ¦¦¯¯¦_  ¯¯¯¦ ¦_¯_¦  __ ___¯_¦
+¦__  _ __ ¦¯¦¦ _¯_ ¦ ¦¦ ¦¦¦¦¦¯ ¦__¦ ¯¯¦¦_¦¯¦_ ¯_¦¦ ¦¯¦¯¯ _¯¯¯¯¦
+¦ ¦¯   _   ¯ ¦¯ ¦___¯¯¦¦¦_¯¦¦¯¦_ ¯¦¦_ ¯  ¦__¯¦¯__  ¯ ¯_¦  ¯__ ¦
+¦ ¦¦__ _ ¦¦ ¯¯¯¦ _¯¯¦¯¦¯_ ¦ ¯¦¦¦¯___¯_ ¦ ¯ ¦_¯ _ ¦_¦_  ¯¦¦¦_ ¯¦
+¦_ __¦ ___¯¦¯_¯¯   ¦¦ _¦¯_ ¦_¦¯¦_¯ ¯_¦¦_ ¦¯____ _¦_¦¯ ¦ ¦__ ¯¦¦
+¦_¦  ¦¯__¦¯ ¦ _¯ ¦¯ ¯_  ¦ ¯¦_ ¯ ¯¯_¯¯_¯_¦_¯¦¯_¯_  ¦__ ¯ ¯¯ ¦¦_¦
+¦¦ _¯ ¦_ ¦¯ ¯ ¯¯¦__¯¦_     ¯¯¦_¯   ___    ¯¯¯¯___¦ _¯¦ ¦¦_ _¯¦¦
+¦¯_¯ ¯__¯ ¦_¦¦¦__¯_¯ ¯__¯_ _¦ ¦¦ ___¯ ¯_¯_¦_¯_¯_ ¯¯  ¦¦¯ ¦¯ ¯¯¦
+¦__¦_¯¯___¦¯_¯__¦¦_   ¦_¦ ¯¦ __ _¯¦_¦__ ¯¦¦¦_¯¯_ _¯¯  ¯_ ¯¦_  ¦
+¦¯¯ _ __¯_¦¦ ¯¦¯ _ ¯¦¦¯ ¯_ ¦¯___ __¯¦ ¦ _ ¯ ¯ ¦¦ ¯  ___¦_¯¦__¯¦
+¦____¦¦_¦ _¯¯ ¦  ¯¯¯ ¦_¦¯¦¦   ___ ¯_¦¯__¯¯ ¦  ¯ ¯¯__¯ ___ _¯_ ¦
+¦ _____ ¦¦  ¯_¯¦¦¯ ¯  ¦ __¯¯¯ ¦_¦  ¦ ¦¦ ¦¯¦__¦ ¯_ ¯ _ ¦_¦  ¦  ¦
+¦ ¦   ¦ ¦¯ ¦_ __¦__ ¦¦__¦  ¦¦  _  ¦¦_¦¯_¯ ¯¯¦¦ _¦¦¯¦¯     _¦¦ ¦
+¦ ¦___¦ ¦ ¦_¯_¦__¯_¯ _¦_¯¯¦ ¦  ¦  ¯  ¦¯_¦¦ _ ¯¦_¦__¦ ¦¦¦_ ¦¯_¦¦
+¦_______¦___¦_¦¦¦¦__¦_¦¦¦¦_¦¦¦¦¦_¦¦¦¦__¦¦¦_¦_¦¦________¦¦¦¦___¦
+ {"code":"https://wa.me/settings/linked_devices#2@4TL1uFnLlh2VEIcKz33gzGqnHBg9Mni5bBQO/MJetfi0T4ForpoeO/wjGBm9vS/VFs6H1jPwjMuYDfInKyMSiY5otjLbKyEYOW4=,rZ+ZKnQsUZzE2qDtSP8gqW/RsqsKMU9Y5Wx8n43uQTs=,ESNTXRb/j0LodcI5+HKVk7eRWItx8lwgY15SH3Pgkjk=,FKQUyQ7Kkwxk14pXQkPn+cfxWAMgWBPZfUkcuFcTUTE=,1"}
+?? QR Code Generated (Attempt: 1 )
+_______________________________________________________________
+¦ _____ ¦_  ¦_¯¦¦ _¦_¦¦¦¦_¯¯¯¦¯¯¯ ¦¦¯ _¦¦___¯_¦¯¦¯¦¦  ¦ _____ ¦
+¦ ¦   ¦ ¦  _¯¦¯¦ ¯¯ _ __¯¯¯_¯¦_¯ ¯¦_ ¯ _¯_¯¦¦_   ¯  _ ¦ ¦   ¦ ¦
+¦ ¦___¦ ¦_¯_¯_¯_ ¦_¦  ¦_¯¯¦¯_ ___ ¯¯¯¯ __¯¯¦¯  ¯_¦¦ _¦¦ ¦___¦ ¦
+¦_______¦_¦_¦ ¦ ¦ ¦_¯_¯ ¯_¦_¯ ¦_¦ ¯ ¯_¯_¦_¦_¦_¦_¦_¯ ¦ ¦_______¦
+¦  __¦¦_¯_ _   ¯__¯¯ ¯__¦ ¦_ _   _¯__¯ ¦ _ ¯¯¯__ ¯¦¦___¯¯ __¯_¦
+¦¦¦_   _¦¦ _ ¯¦¯_  _¦¯¦¯_ ¦¯_¯¯_¦__ ¦¦¦¯¯¯__¯¯_¦¯¯¦¯ ¯  _¦¯ ¦¦¦
+¦¯¯¦_¦ _¯_¦_¦¯ ¦ ¦¦ ¯¯¦¯_¦ ¦¦¦¦ ¯¯¯_ ¯¯_¯¦___¦ ___  ___¦ ¦ _¦¯¦
+¦¦¦ ¦¦ _¯¯__¦  ¦_¯¦_ ¯ ¯  ¯ _¦¯_¦¯¯¯_  ¦  ¯ ¦¦¦¦¦_¯__¯____ ¦¯¦¦
+¦_¦¦¦¯ __¦_ ¯¦¦__¯¦¦___  ¯__¯¦_¯¯   ¯¯__ ¯ ¦_   ¯¦_¦¯ ¯__ ¦  _¦
+¦¯¯___ _ _ _¦¯  ¦¦¦¯ ¯¦ ¦¯ ¦¯¦¯__¯¯¯¯¦    __¦¯¦_¦¦  ¯¯¯_¦¦¦¦__¦
+¦¯¦¯¦¦___¦ ¦¦¦¦ ¦_ ¯ _ __ ¯¦__ _¦¯¦¯ ¯ ¦¯_¯¯¦¯ ¦_¦¯__¦¯¯¦¯_¦¦¦¦
+¦¦ ¦ ¦ _ ¦ ¦_¦¦   ¦ _ ¦__¯¦_¯  ¦ _¦¯ _¦¯ _¯¦  ¯  ¯¦ ¯     ¯¯¦¦¦
+¦¯¯¯¯ ¯_¯¯ __¯_¦¯¦ ¦_¯¦¦__¯¯¦¯¯¯_ ¯¦ _  _¯¦__¦ ¦_   ¦__¦¦¦¦   ¦
+¦¯ ¯ ¯¦_  ¯_  __¦_ ¯¦¦_ ¦ _ ¦  ¯¦  ¯ ¯__¦¯_¦¦__¦¯¦¯_  _ _  _ ¯¦
+¦   ¯ ___  ¯¦¯_ ¦ ¦¯¯¦_¦ ¦¦ ¯ ___  ¯ ¦ _ ¯ ___¯  ¦_¦¦ ___  _¦¯¦
+¦¯  ¯ ¦_¦ _ ¦ __¯ __ ¦ ¦¯¯ ¦¯ ¦_¦ ¯¦¯ _¯¦    ¯¦¦ ¯¦_¦ ¦_¦ ¯_ _¦
+¦ ¦__  _  ¦   ¯ ¦ ¯¦¯¦¦__¯ ¯¦  _  ¦¦¯¯¦_  ¯¯¯¦ ¦_¯_¦  __ ___¯_¦
+¦__  _ __ ¦¯¦¦ _¯_ ¦ ¦¦ ¦¦¦¦¦¯ ¦__¦ ¯¯¦¦_¦¯¦_ ¯_¦¦ ¦¯¦¯¯ _¯¯¯¯¦
+¦ ¦¯   _   ¯ ¦¯ ¦___¯¯¦¦¦_¯¦¦¯¦_ ¯¦¦_ ¯  ¦__¯¦¯__  ¯ ¯_¦  ¯__ ¦
+¦ ¦¦__ _ ¦¦ ¯¯¯¦ _¯¯¦¯¦¯_ ¦ ¯¦¦¦¯___¯_ ¦ ¯ ¦_¯ _ ¦_¦_  ¯¦¦¦_ ¯¦
+¦_ __¦ ___¯¦¯_¯¯   ¦¦ _¦¯_ ¦_¦¯¦_¯ ¯_¦¦_ ¦¯____ _¦_¦¯ ¦ ¦__ ¯¦¦
+¦_¦  ¦¯__¦¯ ¦ _¯ ¦¯ ¯_  ¦ ¯¦_ ¯ ¯¯_¯¯_¯_¦_¯¦¯_¯_  ¦__ ¯ ¯¯ ¦¦_¦
+¦¦ _¯ ¦_ ¦¯ ¯ ¯¯¦__¯¦_     ¯¯¦_¯   ___    ¯¯¯¯___¦ _¯¦ ¦¦_ _¯¦¦
+¦¯_¯ ¯__¯ ¦_¦¦¦__¯_¯ ¯__¯_ _¦ ¦¦ ___¯ ¯_¯_¦_¯_¯_ ¯¯  ¦¦¯ ¦¯ ¯¯¦
+¦__¦_¯¯___¦¯_¯__¦¦_   ¦_¦ ¯¦ __ _¯¦_¦__ ¯¦¦¦_¯¯_ _¯¯  ¯_ ¯¦_  ¦
+¦¯¯ _ __¯_¦¦ ¯¦¯ _ ¯¦¦¯ ¯_ ¦¯___ __¯¦ ¦ _ ¯ ¯ ¦¦ ¯  ___¦_¯¦__¯¦
+¦____¦¦_¦ _¯¯ ¦  ¯¯¯ ¦_¦¯¦¦   ___ ¯_¦¯__¯¯ ¦  ¯ ¯¯__¯ ___ _¯_ ¦
+¦ _____ ¦¦  ¯_¯¦¦¯ ¯  ¦ __¯¯¯ ¦_¦  ¦ ¦¦ ¦¯¦__¦ ¯_ ¯ _ ¦_¦  ¦  ¦
+¦ ¦   ¦ ¦¯ ¦_ __¦__ ¦¦__¦  ¦¦  _  ¦¦_¦¯_¯ ¯¯¦¦ _¦¦¯¦¯     _¦¦ ¦
+¦ ¦___¦ ¦ ¦_¯_¦__¯_¯ _¦_¯¯¦ ¦  ¦  ¯  ¦¯_¦¦ _ ¯¦_¦__¦ ¦¦¦_ ¦¯_¦¦
+¦_______¦___¦_¦¦¦¦__¦_¦¦¦¦_¦¦¦¦¦_¦¦¦¦__¦¦¦_¦_¦¦________¦¦¦¦___¦
+
+debug:    [khalifa-pharmacy:client] Emitting onStateChange event (2 registered)
+?? State Changed: UNPAIRED
+??  WhatsApp Unpaired - Session will be restored on next connection
+debug:    [khalifa-pharmacy:client] Emitting onInterfaceChange event (1 registered)
+http:     [khalifa-pharmacy:client] Current state: QR (CONNECTING)
+http:     [khalifa-pharmacy:client] Waiting page load
+http:     [khalifa-pharmacy:client] Checking is logged...
+http:     [khalifa-pharmacy:client] Waiting for QRCode Scan...
+?? Status: notLogged
+??  Not Logged In - Please Scan QR Code

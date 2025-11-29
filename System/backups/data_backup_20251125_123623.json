@@ -1,0 +1,32 @@
+CommandError: Unable to serialize database: 'charmap' codec can't encode characters in position 1-4: character maps to <undefined>
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$260000$abc123$9fc20d2e0410e26e7ea1fdceb122b6311bc60b92cf4601eb492733053a80fa14",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "Admin",
+    "last_name": "User",
+    "email": "admin@pharmacy.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-11-09T18:26:24Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "conversations.user",
+  "pk": 70,
+  "fields": {
+    "username": "admin",
+    "email": "admin@khalifa.com",
+    "password_hash": "pbkdf2_sha256$600000$3lOYLbjeDVF3UC2GJ1yfco$V8PYwQJYEu2tnkfRPnpFMwmhF7ZKmJRZULWHXEuP5Oc=",
+    "role": "admin",
+    "full_name": Exception ignored while closing generator <generator object cursor_iter at 0x0000022C4ABCE020>:
+Traceback (most recent call last):
+  File "c:\khalefa_Whats\khalefa_Whats\System\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2096, in cursor_iter
+    cursor.close()
+sqlite3.ProgrammingError: Cannot operate on a closed database.

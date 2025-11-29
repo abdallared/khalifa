@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "جميع التذاكر" %}{% endblock %}
+{% block page_title %}{% trans "جميع التذاكر" %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-ticket-alt"></i> {% trans "جميع التذاكر" %}
+    </h4>
+    <div>
+        <button class="btn btn-danger" onclick="closeAllOpenTickets()" title="{% trans 'إغلاق جميع التذاكر المفتوحة' %}">
+            <i class="fas fa-times-circle"></i> {% trans "إغلاق جميع التذاكر المفتوحة" %}
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title mb-1">{{ complaints_count }}</h3>
+                        <h6 class="card-text">{% trans "شكوى" %}</h6>
+                    </div>
+                    <div class="text-white-50">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title mb-1">{{ medicine_count }}</h3>
+                        <h6 class="card-text">{% trans "ادوية" %}</h6>
+                    </div>
+                    <div class="text-white-50">
+                        <i class="fas fa-pills fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title mb-1">{{ follow_up_count }}</h3>
+                        <h6 class="card-text">{% trans "متابعة" %}</h6>
+                    </div>
+                    <div class="text-white-50">
+                        <i class="fas fa-clipboard-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input
+                    type="text"
+                    class="form-control"
+                    id="searchInput"
+                    placeholder="{% trans 'البحث في التذاكر (رقم، عميل، موظف)...' %}"
+                    onkeyup="searchTickets(); markUserActivity();"
+                    onfocus="markUserActivity();"
+                >
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="statusFilter" onchange="filterTickets(); markUserActivity();">
+                    <option value="">{% trans "جميع الحالات" %}</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                    <option value="delayed">Delayed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter" onchange="filterTickets(); markUserActivity();">
+                    <option value="">All Categories</option>
+                    <option value="follow_up">Follow-up</option>
+                    <option value="medicine_order">Medicines</option>
+                    <option value="complaint">Complaint</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="priorityFilter" onchange="filterTickets(); markUserActivity();">
+                    <option value="">{% trans "جميع الأولويات" %}</option>
+                    <option value="high">{% trans "عالية" %}</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">{% trans "منخفضة" %}</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tickets Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="ticketsTable">
+                <thead>
+                    <tr>
+                        <th>{% trans "رقم التذكرة" %}</th>
+                        <th>{% trans "العميل" %}</th>
+                        <th>{% trans "الموظف" %}</th>
+                        <th>{% trans "الحالة" %}</th>
+                        <th>{% trans "الأولوية" %}</th>
+                        <th>{% trans "آخر رسالة" %}</th>
+                        <th>{% trans "تاريخ الإنشاء" %}</th>
+                        <th>{% trans "الإجراءات" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr data-status="{{ ticket.status }}"
+                        data-priority="{{ ticket.priority }}"
+                        data-category="{{ ticket.category }}"
+                        data-delayed="{{ ticket.is_delayed|yesno:'delayed,normal' }}"
+                        data-created="{{ ticket.created_at|date:'Y-m-d' }}"
+                        data-ticket-id="{{ ticket.id }}"
+                        data-customer-name="{{ ticket.customer.name }}"
+                        data-customer-phone="{{ ticket.customer.phone_number }}"
+                        data-agent-name="{% if ticket.assigned_agent %}{{ ticket.assigned_agent.user.get_full_name|default:ticket.assigned_agent.user.username }}{% else %}غير معين{% endif %}"
+                        {% if ticket.is_delayed %}style="background-color: #fff3cd;"{% endif %}>
+                        <td>
+                            <strong>#{{ ticket.id }}</strong>
+                        </td>
+                        <td>
+                            <div>{{ ticket.customer.name }}</div>
+                            <small class="text-muted">{{ ticket.customer.phone_number }}</small>
+                        </td>
+                        <td>
+                            {% if ticket.current_agent %}
+                                {{ ticket.current_agent.user.get_full_name|default:ticket.current_agent.user.username }}
+                                {% if ticket.assigned_agent and ticket.current_agent and ticket.assigned_agent.id != ticket.current_agent.id %}
+                                    <span style="color: #007bff;" title="تم تحويل التذكرة من {{ ticket.assigned_agent.user.get_full_name|default:ticket.assigned_agent.user.username }}">🔄</span>
+                                {% endif %}
+                            {% elif ticket.assigned_agent %}
+                                {{ ticket.assigned_agent.user.get_full_name|default:ticket.assigned_agent.user.username }}
+                            {% else %}
+                                <span class="text-muted">{% trans "غير معين" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.status == 'open' %}
+                                <span class="badge bg-warning">{% trans "مفتوحة" %}</span>
+                            {% elif ticket.status == 'pending' %}
+                                <span class="badge bg-info">{% trans "معلقة" %}</span>
+                            {% elif ticket.status == 'closed' %}
+                                <span class="badge bg-success">{% trans "مغلقة" %}</span>
+                            {% endif %}
+                            
+                            {% if ticket.is_delayed %}
+                                <span class="badge bg-danger ms-1">{% trans "متأخرة" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.priority == 'high' %}
+                                <span class="badge bg-danger">{% trans "عالية" %}</span>
+                            {% elif ticket.priority == 'medium' %}
+                                <span class="badge bg-primary">Medium</span>
+                            {% elif ticket.priority == 'low' %}
+                                <span class="badge bg-secondary">{% trans "منخفضة" %}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ ticket.priority }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ ticket.last_message_at|date:"Y-m-d H:i"|default:"-" }}</small>
+                        </td>
+                        <td>
+                            <small>{{ ticket.created_at|date:"Y-m-d H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTicket({{ ticket.id }})" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if ticket.status != 'closed' %}
+                                <button class="btn btn-sm btn-outline-info" onclick="openConversation({{ ticket.id }}, {{ ticket.customer.id }})" title="Open Conversation">
+                                    <i class="fas fa-comments"></i>
+                                </button>
+                                {% endif %}
+                                {% if ticket.status != 'closed' %}
+                                <button class="btn btn-sm btn-outline-warning"
+                                        onclick="transferTicket({{ ticket.id }})"
+                                        title="Transfer"
+                                        {% if not ticket.assigned_agent %}disabled{% endif %}>
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="closeTicket({{ ticket.id }})" title="Close Ticket">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="fas fa-ticket-alt fa-3x mb-3 d-block"></i>
+                            {% trans "لا توجد تذاكر حالياً" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // دالة إغلاق Modal
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+
+
+    function searchTickets() {
+        const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+
+        rows.forEach(row => {
+            // جمع كل النصوص من الصف
+            const ticketNumber = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+            const customerInfo = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+            const agentInfo = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            const status = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+            // البحث في جميع الحقول
+            const searchText = ticketNumber + ' ' + customerInfo + ' ' + agentInfo + ' ' + status;
+
+            // إظهار/إخفاء الصف
+            if (searchValue === '' || searchText.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function filterTickets() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const priorityFilter = document.getElementById('priorityFilter').value;
+        const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            const category = row.getAttribute('data-category');
+            const priority = row.getAttribute('data-priority');
+            const delayed = row.getAttribute('data-delayed');
+
+            let showRow = true;
+
+            // فلترة حسب الحالة (بما في ذلك delayed)
+            if (statusFilter) {
+                if (statusFilter === 'delayed') {
+                    // إذا اختار المستخدم "delayed"، نعرض فقط التذاكر المتأخرة
+                    if (delayed !== 'delayed') showRow = false;
+                } else if (statusFilter === 'open') {
+                    // إذا اختار "open"، نعرض التذاكر المفتوحة أو المعلقة
+                    if (status !== 'open' && status !== 'pending') showRow = false;
+                } else {
+                    // إذا اختار حالة أخرى، نعرض فقط التذاكر بهذه الحالة
+                    if (status !== statusFilter) showRow = false;
+                }
+            }
+
+            // فلترة حسب الفئة (Category)
+            if (categoryFilter && category !== categoryFilter) showRow = false;
+
+            // فلترة حسب الأولوية
+            if (priorityFilter && priority !== priorityFilter) showRow = false;
+
+            // فلترة حسب البحث
+            if (searchValue !== '') {
+                const ticketNumber = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+                const customerInfo = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                const agentInfo = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                const statusText = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+                const searchText = ticketNumber + ' ' + customerInfo + ' ' + agentInfo + ' ' + statusText;
+
+                if (!searchText.includes(searchValue)) {
+                    showRow = false;
+                }
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+
+    async function viewTicket(ticketId) {
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}/`);
+            const ticket = await response.json();
+
+            if (response.ok) {
+                // Status translation
+                const statusMap = {
+                    'open': 'Open',
+                    'pending': 'Pending',
+                    'in_progress': 'In Progress',
+                    'closed': 'Closed'
+                };
+
+                // Category translation
+                const categoryMap = {
+                    'general': 'General',
+                    'technical': 'Technical',
+                    'billing': 'Billing',
+                    'complaint': 'Complaint',
+                    'medicine_order': 'Medicine Order',
+                    'follow_up': 'Follow Up'
+                };
+
+                // Priority translation
+                const priorityMap = {
+                    'low': 'Low',
+                    'medium': 'Medium',
+                    'high': 'High'
+                };
+
+                const modalContent = `
+                    <div class="modal" id="viewTicketModal" style="display: block;">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Ticket Details #${ticket.id}</h5>
+                                    <button type="button" class="btn-close" onclick="closeModal('viewTicketModal')"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <table class="table">
+                                        <tr><th>Ticket Number:</th><td>${ticket.ticket_number}</td></tr>
+                                        <tr><th>Customer:</th><td>${ticket.customer_name} (${ticket.customer_phone})</td></tr>
+                                        <tr><th>Assigned Agent:</th><td>${ticket.assigned_agent_name || '-'}</td></tr>
+                                        <tr><th>Current Agent:</th><td>${ticket.current_agent_name || '-'}</td></tr>
+                                        <tr><th>Status:</th><td><span class="badge bg-${ticket.status === 'open' ? 'warning' : ticket.status === 'closed' ? 'success' : 'info'}">${statusMap[ticket.status] || ticket.status}</span></td></tr>
+                                        <tr><th>Category:</th><td>${categoryMap[ticket.category] || ticket.category}</td></tr>
+                                        <tr><th>Priority:</th><td><span class="badge bg-${ticket.priority === 'high' ? 'danger' : ticket.priority === 'low' ? 'secondary' : 'primary'}">${priorityMap[ticket.priority] || ticket.priority}</span></td></tr>
+                                        <tr><th>Messages Count:</th><td>${ticket.messages_count}</td></tr>
+                                        <tr><th>Created Date:</th><td>${new Date(ticket.created_at).toLocaleString('en-US')}</td></tr>
+                                        ${ticket.closed_at ? `<tr><th>Closed Date:</th><td>${new Date(ticket.closed_at).toLocaleString('en-US')}</td></tr>` : ''}
+                                        ${ticket.closure_reason ? `<tr><th>Closure Reason:</th><td>${ticket.closure_reason}</td></tr>` : ''}
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-secondary" onclick="closeModal('viewTicketModal')">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalContent);
+            } else {
+                khalifaPharmacy.showToast('Error fetching ticket data', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Error connecting to server', 'error');
+        }
+    }
+
+    async function transferTicket(ticketId) {
+        try {
+            // جلب قائمة الموظفين المتاحين
+            const agentsResponse = await fetch('/api/agents/');
+            const agentsData = await agentsResponse.json();
+
+            if (!agentsResponse.ok) {
+                khalifaPharmacy.showToast('Error loading agents list', 'error');
+                return;
+            }
+
+            // استخراج المصفوفة من الاستجابة
+            const agents = agentsData.results || agentsData;
+
+            // إنشاء قائمة الموظفين
+            const agentOptions = agents.map(agent =>
+                `<option value="${agent.id}">${agent.user.full_name} (${agent.current_active_tickets}/${agent.max_capacity})</option>`
+            ).join('');
+
+            const modalContent = `
+                <div class="modal" id="transferTicketModal" style="display: block;">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Transfer Ticket #${ticketId}</h5>
+                                <button type="button" class="btn-close" onclick="closeModal('transferTicketModal')"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="transferTicketForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">New Agent *</label>
+                                        <select class="form-select" name="agent_id" required>
+                                            <option value="">Select Agent...</option>
+                                            ${agentOptions}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Transfer Reason</label>
+                                        <textarea class="form-control" name="reason" rows="3" placeholder="Optional..."></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="closeModal('transferTicketModal')">Cancel</button>
+                                <button class="btn btn-primary" onclick="submitTransferTicket(${ticketId})">Transfer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Connection error', 'error');
+        }
+    }
+
+    async function submitTransferTicket(ticketId) {
+        const form = document.getElementById('transferTicketForm');
+        const formData = new FormData(form);
+
+        const agentId = formData.get('agent_id');
+        if (!agentId) {
+            khalifaPharmacy.showToast('Please select an agent', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}/transfer/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    agent_id: parseInt(agentId),
+                    reason: formData.get('reason') || ''
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                khalifaPharmacy.showToast(data.message || 'Ticket transferred successfully', 'success');
+                closeModal('transferTicketModal');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                khalifaPharmacy.showToast(data.error || 'Error transferring ticket', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Connection error', 'error');
+        }
+    }
+
+    function openConversation(ticketId, customerId) {
+        // فتح نافذة المحادثة في تبويب جديد للمدير ليتصرف كموظف
+        window.open(`/admin/monitor-agent-conversation/${customerId}/?ticket_id=${ticketId}`, '_blank');
+    }
+
+    async function closeAllOpenTickets() {
+        const confirmMsg = 'هل أنت متأكد من إغلاق جميع التذاكر المفتوحة؟\n\nهذا الإجراء لا يمكن التراجع عنه!';
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/tickets/close_all_open/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                khalifaPharmacy.showToast(data.message || 'تم إغلاق جميع التذاكر بنجاح', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                khalifaPharmacy.showToast(data.error || 'حدث خطأ أثناء إغلاق التذاكر', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+        }
+    }
+
+    async function closeTicket(ticketId) {
+        const reason = prompt('سبب إغلاق التذكرة (اختياري):');
+
+        if (reason === null) return; // المستخدم ضغط إلغاء
+
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}/close/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    reason: reason
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                khalifaPharmacy.showToast(data.message || 'تم إغلاق التذكرة بنجاح', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                khalifaPharmacy.showToast(data.error || 'حدث خطأ أثناء إغلاق التذكرة', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+        }
+    }
+    
+    // Smart Auto-refresh System
+    let autoReloadInterval = null;
+    let userActivityTimeout = null;
+    let isUserActive = false;
+    
+    // Start auto-reload
+    function startAutoReload() {
+        if (autoReloadInterval) return; // Already running
+        
+        autoReloadInterval = setInterval(() => {
+            if (!isUserActive) {
+                console.log('Auto-reloading tickets page...');
+                location.reload();
+            } else {
+                console.log('User is active, skipping reload');
+            }
+        }, 30000); // Check every 30 seconds
+    }
+    
+    // Stop auto-reload
+    function stopAutoReload() {
+        if (autoReloadInterval) {
+            clearInterval(autoReloadInterval);
+            autoReloadInterval = null;
+        }
+    }
+    
+    // Mark user as active and reset inactivity timer
+    function markUserActivity() {
+        isUserActive = true;
+        
+        // Clear existing timeout
+        if (userActivityTimeout) {
+            clearTimeout(userActivityTimeout);
+        }
+        
+        // Set user as inactive after 30 seconds of no activity
+        userActivityTimeout = setTimeout(() => {
+            isUserActive = false;
+            console.log('User inactive, auto-reload will resume');
+        }, 30000); // 30 seconds of inactivity
+    }
+    
+    // Start auto-reload on page load
+    startAutoReload();
+</script>
+{% endblock %}
+

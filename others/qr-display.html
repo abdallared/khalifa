@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp QR Code - Khalifa Pharmacy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .qr-code {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #128C7E;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Khalifa Pharmacy</h1>
+        <h2>📱 WhatsApp Connection</h2>
+        
+        <div id="status" class="status loading">
+            🔄 Loading...
+        </div>
+        
+        <div class="qr-code" id="qrContainer">
+            <div>📱 Loading QR Code...</div>
+        </div>
+        
+        <button onclick="getQRCode()">🔄 Refresh QR Code</button>
+        <button onclick="checkStatus()">📊 Check Status</button>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <p>📋 <strong>Instructions:</strong></p>
+            <ol style="text-align: left; display: inline-block;">
+                <li>Open WhatsApp on your phone</li>
+                <li>Go to Settings → Linked Devices</li>
+                <li>Tap "Link a Device"</li>
+                <li>Scan the QR code above</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'khalifa-pharmacy-secret-key-2025';
+        const BASE_URL = 'http://localhost:3000';
+        
+        async function makeRequest(endpoint, method = 'GET') {
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`, {
+                    method: method,
+                    headers: {
+                        'X-API-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Request failed:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function getQRCode() {
+            const statusEl = document.getElementById('status');
+            const qrEl = document.getElementById('qrContainer');
+            
+            statusEl.className = 'status loading';
+            statusEl.textContent = '🔄 Getting QR Code...';
+            
+            try {
+                const result = await makeRequest('/api/qr-code');
+                
+                if (result.success && result.qr_code) {
+                    qrEl.innerHTML = `<img src="data:image/png;base64,${result.qr_code}" alt="WhatsApp QR Code" />`;
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ QR Code Ready! Scan with WhatsApp';
+                } else if (result.message && result.message.includes('Already connected')) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Already Connected to WhatsApp!';
+                    qrEl.innerHTML = '<div style="color: #25D366; font-size: 48px;">✅</div><div>WhatsApp is connected!</div>';
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = `❌ ${result.message || result.error || 'Failed to get QR Code'}`;
+                    qrEl.innerHTML = '<div>❌ QR Code not available</div>';
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Connection Error: ${error.message}`;
+                qrEl.innerHTML = '<div>❌ Connection failed</div>';
+            }
+        }
+        
+        async function checkStatus() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const result = await makeRequest('/api/status');
+                
+                if (result.connected) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = `✅ Connected! Phone: ${result.phone || 'Unknown'}`;
+                } else {
+                    statusEl.className = 'status loading';
+                    statusEl.textContent = '⏳ Waiting for connection...';
+                    // Auto-refresh QR code if not connected
+                    setTimeout(getQRCode, 1000);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Status Check Failed: ${error.message}`;
+            }
+        }
+        
+        // Auto-start
+        document.addEventListener('DOMContentLoaded', function() {
+            getQRCode();
+            
+            // Auto-check status every 5 seconds
+            setInterval(checkStatus, 5000);
+        });
+    </script>
+</body>
+</html>

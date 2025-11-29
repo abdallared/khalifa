@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "الملف الشخصي" %}{% endblock %}
+{% block page_title %}{% trans "الملف الشخصي" %}{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    
+    <!-- Profile Info -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="avatar-xl bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                    {{ user.get_full_name|default:user.username|slice:":1"|upper }}
+                </div>
+                <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted mb-3">@{{ user.username }}</p>
+                <span class="badge bg-{% if user.role == 'admin' %}danger{% else %}primary{% endif %} mb-3">
+                    {% if user.role == 'admin' %}{% trans "مدير" %}{% else %}{% trans "موظف" %}{% endif %}
+                </span>
+                
+                <hr>
+                
+                <div class="text-start">
+                    <p class="mb-2">
+                        <i class="fas fa-envelope text-muted"></i>
+                        <strong class="ms-2">{% trans "البريد" %}:</strong>
+                        <span class="float-end">{{ user.email|default:"-" }}</span>
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-phone text-muted"></i>
+                        <strong class="ms-2">{% trans "الهاتف" %}:</strong>
+                        <span class="float-end">{{ user.phone_number|default:"-" }}</span>
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-calendar text-muted"></i>
+                        <strong class="ms-2">{% trans "تاريخ الانضمام" %}:</strong>
+                        <span class="float-end">{{ user.date_joined|date:"Y-m-d" }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Profile -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit"></i> {% trans "تعديل الملف الشخصي" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="profileForm">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "الاسم الأول" %}</label>
+                            <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "الاسم الأخير" %}</label>
+                            <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "البريد الإلكتروني" %}</label>
+                            <input type="email" class="form-control" name="email" value="{{ user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "رقم الهاتف" %}</label>
+                            <input type="tel" class="form-control" name="phone_number" value="{{ user.phone_number }}">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6 class="mb-3">{% trans "تغيير كلمة المرور" %}</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{% trans "كلمة المرور الحالية" %}</label>
+                            <input type="password" class="form-control" name="current_password">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{% trans "كلمة المرور الجديدة" %}</label>
+                            <input type="password" class="form-control" name="new_password">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{% trans "تأكيد كلمة المرور" %}</label>
+                            <input type="password" class="form-control" name="confirm_password">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% trans "حفظ التغييرات" %}
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> {% trans "إلغاء" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-xl {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        khalifaPharmacy.showToast('تم حفظ التغييرات بنجاح', 'success');
+    });
+</script>
+{% endblock %}
+

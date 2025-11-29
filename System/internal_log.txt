@@ -1,0 +1,9 @@
+Base URL: https://elmujib.com/api
+Vendor UID: a414ed0c-cd3f-4b30-ad1c-f8e548248553
+Token: xY7htGpBoL...
+Phone ID: 941393185714222
+Sending request to: https://elmujib.com/api/a414ed0c-cd3f-4b30-ad1c-f8e548248553/contact/send-message
+Payload: {'phone_number': '201205455559', 'message_body': 'Test Debug Message', 'from_phone_number_id': '941393185714222'}
+Status Code: 400
+Response Text: {"result":"failed","message":" (#100) Invalid parameter  Invalid parameter","data":[]}
+Request completed.

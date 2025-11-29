@@ -1,0 +1,645 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "التقارير" %}{% endblock %}
+{% block page_title %}{% trans "التقارير" %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-chart-bar"></i> {% trans "تقارير الأداء" %}
+    </h4>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{% trans "من تاريخ" %}</label>
+                <input type="date" class="form-control" id="dateFrom">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "إلى تاريخ" %}</label>
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" onclick="filterReports()">
+                    <i class="fas fa-filter"></i> {% trans "تصفية" %}
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-success w-100" onclick="exportReports()">
+                    <i class="fas fa-file-excel"></i> {% trans "تصدير Excel" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-md bg-primary bg-opacity-10 text-primary rounded">
+                            <i class="fas fa-ticket-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">{% trans "إجمالي التذاكر" %}</h6>
+                        <h3 class="mb-0" id="totalTickets">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-md bg-success bg-opacity-10 text-success rounded">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">{% trans "التذاكر المغلقة" %}</h6>
+                        <h3 class="mb-0" id="closedTickets">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-md bg-warning bg-opacity-10 text-warning rounded">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">{% trans "التذاكر المتأخرة" %}</h6>
+                        <h3 class="mb-0" id="delayedTickets">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-md bg-info bg-opacity-10 text-info rounded">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">{% trans "العملاء الجدد" %}</h6>
+                        <h3 class="mb-0" id="newCustomers">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <!-- Tickets Chart -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie"></i> {% trans "توزيع التذاكر" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="ticketsChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Chart -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> {% trans "أداء الموظفين" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Time Chart -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">
+            <i class="fas fa-chart-line"></i> {% trans "متوسط وقت الرد (آخر 7 أيام)" %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <canvas id="responseTimeChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Agents Performance -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-users"></i> {% trans "أداء الموظفين" %}
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="agentsTable">
+                <thead>
+                    <tr>
+                        <th>{% trans "الموظف" %}</th>
+                        <th>{% trans "التذاكر المعالجة" %}</th>
+                        <th>{% trans "التذاكر المغلقة" %}</th>
+                        <th>{% trans "متوسط وقت الرد (دقيقة)" %}</th>
+                        <th>{% trans "الرسائل المرسلة" %}</th>
+                        <th>{% trans "معدل الرضا" %}</th>
+                        <th>{% trans "النتيجة الإجمالية" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kpi in agents_kpi %}
+                    <tr>
+                        <td data-agent-name="{{ kpi.agent.user.full_name|default:kpi.agent.user.username }}">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                    {{ kpi.agent.user.full_name|default:kpi.agent.user.username|slice:":1"|upper }}
+                                </div>
+                                <div>{{ kpi.agent.user.full_name|default:kpi.agent.user.username }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ kpi.total_tickets }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ kpi.closed_tickets }}</span>
+                        </td>
+                        <td>
+                            {% if kpi.avg_response_time_seconds %}
+                                {% widthratio kpi.avg_response_time_seconds 60 1 %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ kpi.messages_sent }}</span>
+                        </td>
+                        <td>
+                            {% if kpi.customer_satisfaction_score %}
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 20px; min-width: 100px;">
+                                        <div class="progress-bar bg-success" style="width: {{ kpi.customer_satisfaction_score|floatformat:0 }}%">
+                                            {{ kpi.customer_satisfaction_score|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if kpi.overall_kpi_score %}
+                                <span class="badge bg-{% if kpi.overall_kpi_score >= 80 %}success{% elif kpi.overall_kpi_score >= 60 %}warning{% else %}danger{% endif %}">
+                                    {{ kpi.overall_kpi_score|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-chart-bar fa-3x mb-3 d-block"></i>
+                            {% trans "لا توجد بيانات لعرضها" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-sm {
+        width: 35px;
+        height: 35px;
+        font-size: 0.875rem;
+    }
+
+    .avatar-md {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // تعريف Charts كمتغيرات عامة
+    window.ticketsChartObj = null;
+    window.performanceChartObj = null;
+    window.responseTimeChartObj = null;
+
+    // تحميل البيانات عند فتح الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        loadReportsData();
+        setDefaultDates();
+    });
+
+    // تعيين التواريخ الافتراضية (اليوم)
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = today;
+        document.getElementById('dateTo').value = today;
+    }
+
+    // تحميل بيانات التقارير
+    async function loadReportsData() {
+        const dateFromEl = document.getElementById('dateFrom');
+        const dateToEl = document.getElementById('dateTo');
+
+        if (!dateFromEl || !dateToEl) {
+            console.error('Date input elements not found');
+            return;
+        }
+
+        const dateFrom = dateFromEl.value || '';
+        const dateTo = dateToEl.value || '';
+
+        try {
+            console.log('Loading reports from', dateFrom, 'to', dateTo);
+
+            // تحميل التقرير اليومي
+            const response = await fetch(`/api/reports/?type=daily&date_from=${dateFrom}&date_to=${dateTo}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'فشل تحميل التقارير';
+                try {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    errorMessage = errorData.detail || errorData.error || errorMessage;
+                } catch (e) {
+                    console.error('Could not parse error response');
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            console.log('Reports Data:', data);
+
+            if (data) {
+                updateStatistics(data);
+            } else {
+                console.warn('No data returned from API');
+            }
+
+        } catch (error) {
+            console.error('Error loading reports:', error);
+            const errorMsg = error.message || 'حدث خطأ غير معروف';
+
+            if (typeof khalifaPharmacy !== 'undefined' && khalifaPharmacy.showToast) {
+                khalifaPharmacy.showToast('حدث خطأ أثناء تحميل التقارير: ' + errorMsg, 'error');
+            } else {
+                alert('حدث خطأ أثناء تحميل التقارير: ' + errorMsg);
+            }
+        }
+    }
+
+    // تهيئة الرسوم البيانية
+    function initCharts() {
+        // Tickets Pie Chart
+        const ticketsCtx = document.getElementById('ticketsChart').getContext('2d');
+        window.ticketsChartObj = new Chart(ticketsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['مفتوحة', 'مغلقة', 'متأخرة'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.8)',
+                        'rgba(25, 135, 84, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        rtl: true,
+                        labels: {
+                            font: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Performance Bar Chart
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        window.performanceChartObj = new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'النتيجة الإجمالية',
+                    data: [],
+                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            font: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Response Time Line Chart
+        const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+        window.responseTimeChartObj = new Chart(responseTimeCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'متوسط وقت الرد (دقيقة)',
+                    data: [],
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // تحديث الإحصائيات
+    function updateStatistics(data) {
+        console.log('Updating statistics with data:', data);
+
+        try {
+            // تحديث إحصائيات التذاكر
+            if (data.tickets) {
+                const totalTicketsEl = document.getElementById('totalTickets');
+                const closedTicketsEl = document.getElementById('closedTickets');
+                const delayedTicketsEl = document.getElementById('delayedTickets');
+                const newCustomersEl = document.getElementById('newCustomers');
+
+                if (totalTicketsEl) totalTicketsEl.textContent = data.tickets.total || 0;
+                if (closedTicketsEl) closedTicketsEl.textContent = data.tickets.closed || 0;
+                if (delayedTicketsEl) delayedTicketsEl.textContent = data.tickets.delayed || 0;
+                if (newCustomersEl) newCustomersEl.textContent = data.tickets.total || 0;
+
+                // تحديث Tickets Chart
+                if (window.ticketsChartObj) {
+                    window.ticketsChartObj.data.datasets[0].data = [
+                        data.tickets.open || 0,
+                        data.tickets.closed || 0,
+                        data.tickets.delayed || 0
+                    ];
+                    window.ticketsChartObj.update();
+                }
+            }
+
+            // تحديث Performance Chart من جدول الموظفين
+            updatePerformanceChart();
+
+        } catch (error) {
+            console.error('Error updating statistics:', error);
+        }
+    }
+
+    // تحديث رسم أداء الموظفين
+    function updatePerformanceChart() {
+        const table = document.getElementById('agentsTable');
+        if (!table) {
+            console.warn('Agents table not found');
+            return;
+        }
+
+        const rows = table.querySelectorAll('tbody tr');
+        const labels = [];
+        const scores = [];
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+
+            // التحقق من وجود 7 أعمدة على الأقل
+            if (cells.length >= 7) {
+                const nameCell = cells[0];
+                const scoreCell = cells[6];
+
+                if (nameCell && scoreCell) {
+                    const nameDiv = nameCell.querySelector('div.d-flex > div:last-child');
+                    const name = nameDiv ? nameDiv.textContent.trim() : '';
+                    const scoreText = scoreCell.textContent.trim();
+
+                    // تجاهل الصفوف الفارغة أو رسائل "لا توجد بيانات"
+                    if (name && scoreText !== '-' && !name.includes('لا توجد')) {
+                        // استخراج الرقم من النص (مثل "85.5%" -> 85.5)
+                        const scoreMatch = scoreText.match(/[\d.]+/);
+                        const score = scoreMatch ? parseFloat(scoreMatch[0]) : 0;
+
+                        if (name && !isNaN(score)) {
+                            labels.push(name);
+                            scores.push(score);
+                        }
+                    }
+                }
+            }
+        });
+
+        // تحديث الرسم البياني
+        if (window.performanceChartObj) {
+            window.performanceChartObj.data.labels = labels;
+            window.performanceChartObj.data.datasets[0].data = scores;
+            window.performanceChartObj.update();
+        }
+    }
+
+    // تصفية التقارير
+    function filterReports() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        if (!dateFrom || !dateTo) {
+            khalifaPharmacy.showToast('يرجى اختيار نطاق التاريخ', 'warning');
+            return;
+        }
+
+        if (new Date(dateFrom) > new Date(dateTo)) {
+            khalifaPharmacy.showToast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'warning');
+            return;
+        }
+
+        khalifaPharmacy.showToast('جاري تصفية التقارير...', 'info');
+        loadReportsData();
+    }
+
+    // تصدير التقارير إلى Excel
+    async function exportReports() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        if (!dateFrom || !dateTo) {
+            khalifaPharmacy.showToast('يرجى اختيار نطاق التاريخ', 'warning');
+            return;
+        }
+
+        try {
+            khalifaPharmacy.showToast('جاري تصدير التقارير...', 'info');
+
+            // جمع بيانات الجدول
+            const table = document.getElementById('agentsTable');
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+
+            // العناوين
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push(th.textContent.trim());
+            });
+            csvContent += headers.join(',') + '\n';
+
+            // البيانات
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach((td, index) => {
+                    let text;
+                    // ✅ للعمود الأول (اسم الموظف)، استخدم data-agent-name
+                    if (index === 0 && td.hasAttribute('data-agent-name')) {
+                        text = td.getAttribute('data-agent-name');
+                    } else {
+                        // استخراج النص فقط (بدون HTML)
+                        text = td.textContent.trim();
+                    }
+                    // إزالة الفواصل والأسطر الجديدة
+                    text = text.replace(/,/g, '').replace(/\n/g, ' ');
+                    row.push(text);
+                });
+                if (row.length > 0 && row[0] !== 'لا توجد بيانات لعرضها') {
+                    csvContent += row.join(',') + '\n';
+                }
+            });
+
+            // تحميل الملف
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `تقرير_الأداء_${dateFrom}_${dateTo}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            khalifaPharmacy.showToast('تم تصدير التقرير بنجاح', 'success');
+
+        } catch (error) {
+            console.error('Error exporting reports:', error);
+            khalifaPharmacy.showToast('حدث خطأ أثناء تصدير التقارير', 'error');
+        }
+    }
+</script>
+{% endblock %}
+

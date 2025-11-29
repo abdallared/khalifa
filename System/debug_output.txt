@@ -1,0 +1,70 @@
+==================================================
+RECENT TICKETS DEBUG
+==================================================
+
+Ticket: TKT-20251111-0015
+  Customer: 201019571158
+  Category: general
+  Category Selected At: None
+  Status: open
+  Customer Messages: 3
+  Total Messages: 4
+  First customer messages:
+    1. السلام عليكم
+    2. ٢
+    3. ااي
+
+Ticket: TKT-20251111-0014
+  Customer: 201019571158
+  Category: general
+  Category Selected At: None
+  Status: closed
+  Customer Messages: 2
+  Total Messages: 3
+  First customer messages:
+    1. السلام عليكم
+    2. ١
+
+Ticket: TKT-20251111-0013
+  Customer: 201019571158
+  Category: general
+  Category Selected At: None
+  Status: closed
+  Customer Messages: 3
+  Total Messages: 4
+  First customer messages:
+    1. السلام عليكم
+    2. ١
+    3. تبتتب
+
+Ticket: TKT-20251111-0012
+  Customer: 201019571158
+  Category: general
+  Category Selected At: None
+  Status: closed
+  Customer Messages: 4
+  Total Messages: 6
+  First customer messages:
+    1. ثبل
+    2. للل
+    3. ااا
+
+Ticket: TKT-20251111-0011
+  Customer: 201019571158
+  Category: general
+  Category Selected At: None
+  Status: closed
+  Customer Messages: 2
+  Total Messages: 3
+  First customer messages:
+    1. السلام عليكم
+    2. ١
+
+==================================================
+CATEGORY COUNTS
+==================================================
+Complaints: 11
+Medicine Orders: 9
+Follow-ups: 5
+General: 95
+Total: 125

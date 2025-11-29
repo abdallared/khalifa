@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقاريري الشخصية{% endblock %}
+{% block page_title %}تقاريري الشخصية{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-chart-line"></i> تقاريري الشخصية
+    </h4>
+</div>
+
+<!-- Today's KPI -->
+{% if today_kpi %}
+<div class="row g-4 mb-4">
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">التذاكر المعالجة اليوم</h6>
+                        <h2 class="mb-0 text-primary">{{ today_kpi.tickets_handled }}</h2>
+                    </div>
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-success-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">التذاكر المغلقة اليوم</h6>
+                        <h2 class="mb-0 text-success">{{ today_kpi.tickets_closed }}</h2>
+                    </div>
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-info-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">متوسط وقت الرد</h6>
+                        <h2 class="mb-0 text-info">
+                            {% if today_kpi.avg_response_time %}
+                                {{ today_kpi.avg_response_time|floatformat:1 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </h2>
+                        <small class="text-muted">دقيقة</small>
+                    </div>
+                    <div class="stat-icon bg-info">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">الرسائل المرسلة</h6>
+                        <h2 class="mb-0 text-warning">{{ today_kpi.messages_sent }}</h2>
+                    </div>
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- More Details -->
+<div class="row g-4 mb-4">
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="mb-3">
+                    <i class="fas fa-hourglass-half"></i> متوسط وقت الحل
+                </h6>
+                <h3 class="mb-0">
+                    {% if today_kpi.avg_resolution_time %}
+                        {{ today_kpi.avg_resolution_time|floatformat:1 }} دقيقة
+                    {% else %}
+                        - دقيقة
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="mb-3">
+                    <i class="fas fa-smile"></i> معدل الرضا
+                </h6>
+                {% if today_kpi.satisfaction_rate %}
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-success" style="width: {{ today_kpi.satisfaction_rate }}%">
+                            <strong>{{ today_kpi.satisfaction_rate|floatformat:0 }}%</strong>
+                        </div>
+                    </div>
+                {% else %}
+                    <h3 class="mb-0">لا توجد بيانات</h3>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> لا توجد بيانات لليوم الحالي
+</div>
+{% endif %}
+
+<!-- Last 7 Days -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-week"></i> آخر 7 أيام
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>التذاكر المعالجة</th>
+                        <th>التذاكر المغلقة</th>
+                        <th>متوسط وقت الرد</th>
+                        <th>متوسط وقت الحل</th>
+                        <th>معدل الرضا</th>
+                        <th>الرسائل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kpi in last_7_days_kpi %}
+                    <tr>
+                        <td>{{ kpi.date|date:"Y-m-d" }}</td>
+                        <td>
+                            <span class="badge bg-primary">{{ kpi.tickets_handled }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ kpi.tickets_closed }}</span>
+                        </td>
+                        <td>
+                            {% if kpi.avg_response_time %}
+                                {{ kpi.avg_response_time|floatformat:1 }} د
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if kpi.avg_resolution_time %}
+                                {{ kpi.avg_resolution_time|floatformat:1 }} د
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if kpi.satisfaction_rate %}
+                                <div class="progress" style="height: 20px; width: 100px;">
+                                    <div class="progress-bar bg-success" style="width: {{ kpi.satisfaction_rate }}%">
+                                        {{ kpi.satisfaction_rate|floatformat:0 }}%
+                                    </div>
+                                </div>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ kpi.messages_sent }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-chart-line fa-3x mb-3 d-block"></i>
+                            لا توجد بيانات لعرضها
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border: none;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        transition: var(--transition-fast);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .bg-primary-light {
+        background-color: rgba(44, 95, 45, 0.1);
+    }
+    
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+    
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+</style>
+{% endblock %}
+

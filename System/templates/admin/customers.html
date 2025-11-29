@@ -1,0 +1,709 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "إدارة العملاء" %}{% endblock %}
+{% block page_title %}{% trans "إدارة العملاء" %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-user-friends"></i> {% trans "قائمة العملاء" %}
+    </h4>
+    <div>
+        <button class="btn btn-success me-2" onclick="exportToExcel()" title="{% trans 'تصدير إلى Excel' %}">
+            <i class="fas fa-file-excel"></i> {% trans "تصدير Excel" %}
+        </button>
+        <span class="badge bg-primary fs-6">{% trans "إجمالي العملاء" %}: {{ customers.count }}</span>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0">
+            <i class="fas fa-calendar-alt"></i> {% trans "تصفية حسب الفترة الزمنية" %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{% trans "من تاريخ" %}</label>
+                <input type="date" class="form-control" id="dateFrom">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "إلى تاريخ" %}</label>
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" onclick="applyDateFilter()">
+                    <i class="fas fa-filter"></i> {% trans "تطبيق الفلتر" %}
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-secondary w-100" onclick="clearDateFilter()">
+                    <i class="fas fa-times"></i> {% trans "إلغاء الفلتر" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-10">
+                <input
+                    type="text"
+                    class="form-control"
+                    id="searchInput"
+                    placeholder="{% trans 'البحث عن عميل (الاسم، الهاتف، البريد)...' %}"
+                    onkeyup="searchCustomers()"
+                >
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-info w-100" onclick="showFilteredCount()">
+                    <i class="fas fa-info-circle"></i> {% trans "عدد النتائج" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="customersTable">
+                <thead>
+                    <tr>
+                        <th>{% trans "العميل" %}</th>
+                        <th>{% trans "رقم الهاتف" %}</th>
+                        <th>{% trans "البريد الإلكتروني" %}</th>
+                        <th>{% trans "المصدر" %}</th>
+                        <th>{% trans "التذاكر" %}</th>
+                        <th>{% trans "تاريخ التسجيل" %}</th>
+                        <th>{% trans "الإجراءات" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr data-created="{{ customer.created_at|date:'Y-m-d' }}"
+                        data-customer-name="{{ customer.name }}"
+                        data-customer-phone="{{ customer.phone_number }}"
+                        data-customer-email="{{ customer.email|default:'-' }}"
+                        data-customer-source="{{ customer.source }}"
+                        data-customer-tickets="{{ customer.ticket_set.count }}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-md bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                    {{ customer.name|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ customer.name }}</div>
+                                    {% if customer.tags_list %}
+                                        <div class="mt-1">
+                                            {% for customer_tag in customer.tags_list %}
+                                                <span class="badge bg-secondary me-1">{{ customer_tag.tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <i class="fab fa-whatsapp text-success"></i>
+                            {{ customer.phone_number }}
+                        </td>
+                        <td>{{ customer.email|default:"-" }}</td>
+                        <td>
+                            {% if customer.source == 'whatsapp' %}
+                                <span class="badge bg-success">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </span>
+                            {% elif customer.source == 'web' %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-globe"></i> {% trans "الموقع" %}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ customer.source }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ customer.ticket_set.count }}</span>
+                        </td>
+                        <td>
+                            <small>{{ customer.created_at|date:"Y-m-d H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-success" onclick="editCustomerName({{ customer.id }}, '{{ customer.name|escapejs }}')" title="Edit Name">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer({{ customer.id }})" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewHistory({{ customer.id }})" title="Conversation History">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-user-friends fa-3x mb-3 d-block"></i>
+                            {% trans "لا يوجد عملاء حالياً" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-md {
+        width: 45px;
+        height: 45px;
+        font-size: 1.125rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal Functions
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            modal.remove();
+        }
+    }
+
+    // Edit Customer Name
+    async function editCustomerName(customerId, currentName) {
+        const modalContent = `
+            <div class="modal" id="editCustomerModal" style="display: block;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-edit"></i> Edit Customer Name
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" onclick="closeModal('editCustomerModal')"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editCustomerForm">
+                                <div class="mb-3">
+                                    <label for="customerName" class="form-label">New Name</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="customerName"
+                                        value="${currentName || ''}"
+                                        required
+                                        placeholder="Enter customer name"
+                                    >
+                                </div>
+                                <div id="editErrorMessage" class="alert alert-danger d-none"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('editCustomerModal')">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="saveCustomerName(${customerId})">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+
+        // Focus on input
+        setTimeout(() => {
+            document.getElementById('customerName').focus();
+        }, 100);
+
+        // Handle Enter key
+        document.getElementById('customerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveCustomerName(customerId);
+            }
+        });
+    }
+
+    // Save Customer Name
+    async function saveCustomerName(customerId) {
+        const nameInput = document.getElementById('customerName');
+        const newName = nameInput.value.trim();
+        const errorDiv = document.getElementById('editErrorMessage');
+
+        if (!newName) {
+            errorDiv.textContent = 'Please enter customer name';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/customers/${customerId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    name: newName
+                })
+            });
+
+            if (response.ok) {
+                closeModal('editCustomerModal');
+                khalifaPharmacy.showToast('Customer name updated successfully', 'success');
+
+                // Reload page to show update
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                const data = await response.json();
+                errorDiv.textContent = data.error || 'Error occurred during update';
+                errorDiv.classList.remove('d-none');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorDiv.textContent = 'Error connecting to server';
+            errorDiv.classList.remove('d-none');
+        }
+    }
+
+    // View Customer Details
+    async function viewCustomer(customerId) {
+        try {
+            const response = await fetch(`/api/customers/${customerId}/`);
+            const data = await response.json();
+
+            if (response.ok) {
+                const modalContent = `
+                    <div class="modal" id="viewCustomerModal" style="display: block;">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-user"></i> Customer Details
+                                    </h5>
+                                    <button type="button" class="btn-close" onclick="closeModal('viewCustomerModal')"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <!-- Basic Information -->
+                                        <div class="col-12">
+                                            <h6 class="border-bottom pb-2 mb-3">
+                                                <i class="fas fa-info-circle"></i> Basic Information
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small">Name</label>
+                                            <div class="fw-bold">${data.name || '-'}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small">Phone Number</label>
+                                            <div class="fw-bold">
+                                                <i class="fab fa-whatsapp text-success"></i> ${data.phone_number}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small">Email</label>
+                                            <div class="fw-bold">${data.email || '-'}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small">WhatsApp ID</label>
+                                            <div class="fw-bold">${data.wa_id || '-'}</div>
+                                        </div>
+
+                                        <!-- Status & Statistics -->
+                                        <div class="col-12 mt-4">
+                                            <h6 class="border-bottom pb-2 mb-3">
+                                                <i class="fas fa-chart-bar"></i> Status & Statistics
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">Customer Type</label>
+                                            <div>
+                                                ${data.customer_type === 'regular' ? '<span class="badge bg-primary">Regular</span>' :
+                                                  data.customer_type === 'vip' ? '<span class="badge bg-warning">VIP</span>' :
+                                                  '<span class="badge bg-secondary">' + data.customer_type + '</span>'}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">Status</label>
+                                            <div>
+                                                ${data.is_blocked ? '<span class="badge bg-danger">Blocked</span>' : '<span class="badge bg-success">Active</span>'}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">Total Tickets</label>
+                                            <div class="fw-bold fs-5 text-primary">${data.total_tickets_count || 0}</div>
+                                        </div>
+
+                                        <!-- Dates -->
+                                        <div class="col-12 mt-4">
+                                            <h6 class="border-bottom pb-2 mb-3">
+                                                <i class="fas fa-calendar"></i> Dates
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">First Contact</label>
+                                            <div class="fw-bold">${data.first_contact_date ? new Date(data.first_contact_date).toLocaleString('en-US') : '-'}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">Last Contact</label>
+                                            <div class="fw-bold">${data.last_contact_date ? new Date(data.last_contact_date).toLocaleString('en-US') : '-'}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small">Registration Date</label>
+                                            <div class="fw-bold">${new Date(data.created_at).toLocaleString('en-US')}</div>
+                                        </div>
+
+                                        <!-- Tags -->
+                                        ${data.tags_list && data.tags_list.length > 0 ? `
+                                        <div class="col-12 mt-4">
+                                            <h6 class="border-bottom pb-2 mb-3">
+                                                <i class="fas fa-tags"></i> Tags
+                                            </h6>
+                                            <div>
+                                                ${data.tags_list.map(tag => `<span class="badge bg-secondary me-1">${tag}</span>`).join('')}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="closeModal('viewCustomerModal')">
+                                        <i class="fas fa-times"></i> Close
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="closeModal('viewCustomerModal'); viewHistory(${customerId})">
+                                        <i class="fas fa-history"></i> View Conversation History
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalContent);
+            } else {
+                khalifaPharmacy.showToast('Error loading customer data', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Error connecting to server', 'error');
+        }
+    }
+
+    // View Conversation History
+    async function viewHistory(customerId) {
+        try {
+            console.log('Fetching history for customer:', customerId);
+
+            // Fetch customer data
+            const customerResponse = await fetch(`/api/customers/${customerId}/`);
+            const customerData = await customerResponse.json();
+
+            console.log('Customer data:', customerData);
+
+            // Fetch tickets
+            const ticketsResponse = await fetch(`/api/tickets/?customer=${customerId}`);
+            const ticketsData = await ticketsResponse.json();
+
+            console.log('Tickets response status:', ticketsResponse.status);
+            console.log('Tickets data:', ticketsData);
+
+            if (customerResponse.ok && ticketsResponse.ok) {
+                const tickets = ticketsData.results || ticketsData;
+
+                console.log('Tickets array:', tickets);
+
+                const ticketsHtml = tickets.length > 0 ? tickets.map(ticket => `
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Ticket #${ticket.ticket_number}</strong>
+                                ${ticket.status === 'open' ? '<span class="badge bg-success ms-2">Open</span>' :
+                                  ticket.status === 'closed' ? '<span class="badge bg-secondary ms-2">Closed</span>' :
+                                  ticket.status === 'pending' ? '<span class="badge bg-warning ms-2">Pending</span>' :
+                                  ticket.status === 'in_progress' ? '<span class="badge bg-primary ms-2">In Progress</span>' :
+                                  '<span class="badge bg-info ms-2">' + ticket.status + '</span>'}
+                            </div>
+                            <small class="text-muted">${new Date(ticket.created_at).toLocaleString('en-US')}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <small class="text-muted">Assigned Agent:</small>
+                                    <div class="fw-bold">${ticket.assigned_agent_name || '-'}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Current Agent:</small>
+                                    <div class="fw-bold">${ticket.current_agent_name || '-'}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Category:</small>
+                                    <div>
+                                        ${ticket.category === 'general' ? '<span class="badge bg-secondary">General</span>' :
+                                          ticket.category === 'technical' ? '<span class="badge bg-info">Technical</span>' :
+                                          ticket.category === 'billing' ? '<span class="badge bg-warning">Billing</span>' :
+                                          ticket.category === 'complaint' ? '<span class="badge bg-danger">Complaint</span>' :
+                                          '<span class="badge bg-secondary">' + (ticket.category || '-') + '</span>'}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Priority:</small>
+                                    <div>
+                                        ${ticket.priority === 'high' ? '<span class="badge bg-danger">High</span>' :
+                                          ticket.priority === 'medium' ? '<span class="badge bg-warning">Medium</span>' :
+                                          '<span class="badge bg-info">Low</span>'}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">First Response Time:</small>
+                                    <div>${ticket.first_response_at ? new Date(ticket.first_response_at).toLocaleString('en-US') : '<span class="text-muted">Not responded yet</span>'}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Messages Count:</small>
+                                    <div class="fw-bold text-primary">${ticket.messages_count || 0}</div>
+                                </div>
+                                ${ticket.closed_at ? `
+                                <div class="col-md-6">
+                                    <small class="text-muted">Closed Date:</small>
+                                    <div>${new Date(ticket.closed_at).toLocaleString('en-US')}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Closed By:</small>
+                                    <div>${ticket.closed_by_name || '-'}</div>
+                                </div>
+                                ` : ''}
+                                ${ticket.is_delayed ? `
+                                <div class="col-12">
+                                    <div class="alert alert-warning mb-0 py-2">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Delayed Ticket</strong> - Delay Count: ${ticket.delay_count || 0}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : '<div class="alert alert-info"><i class="fas fa-info-circle"></i> No tickets found for this customer</div>';
+
+                const modalContent = `
+                    <div class="modal" id="viewHistoryModal" style="display: block;">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-history"></i> Customer Conversation History: ${customerData.name}
+                                    </h5>
+                                    <button type="button" class="btn-close" onclick="closeModal('viewHistoryModal')"></button>
+                                </div>
+                                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                    <div class="mb-3">
+                                        <span class="badge bg-primary fs-6">Total Tickets: ${tickets.length}</span>
+                                        <span class="badge bg-success fs-6 ms-2">Open: ${tickets.filter(t => t.status === 'open').length}</span>
+                                        <span class="badge bg-secondary fs-6 ms-2">Closed: ${tickets.filter(t => t.status === 'closed').length}</span>
+                                    </div>
+                                    ${ticketsHtml}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="closeModal('viewHistoryModal')">
+                                        <i class="fas fa-times"></i> Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalContent);
+            } else {
+                console.error('Response not OK:', {
+                    customerStatus: customerResponse.status,
+                    ticketsStatus: ticketsResponse.status
+                });
+                khalifaPharmacy.showToast('Error loading conversation history', 'error');
+            }
+        } catch (error) {
+            console.error('Error in viewHistory:', error);
+            khalifaPharmacy.showToast(`Error connecting to server: ${error.message}`, 'error');
+        }
+    }
+
+    // إغلاق الـ Modal عند الضغط خارجه
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            const modalId = event.target.id;
+            closeModal(modalId);
+        }
+    });
+
+    // إغلاق الـ Modal عند الضغط على ESC
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal[style*="display: block"]');
+            modals.forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+
+    // تطبيق فلتر التاريخ
+    function applyDateFilter() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        if (!dateFrom || !dateTo) {
+            khalifaPharmacy.showToast('الرجاء اختيار تاريخ البداية والنهاية', 'warning');
+            return;
+        }
+
+        if (new Date(dateFrom) > new Date(dateTo)) {
+            khalifaPharmacy.showToast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'warning');
+            return;
+        }
+
+        filterCustomers();
+        khalifaPharmacy.showToast('تم تطبيق الفلتر بنجاح', 'success');
+    }
+
+    // إلغاء فلتر التاريخ
+    function clearDateFilter() {
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        filterCustomers();
+        khalifaPharmacy.showToast('تم إلغاء الفلتر', 'info');
+    }
+
+    // فلترة العملاء
+    function filterCustomers() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#customersTable tbody tr');
+
+        rows.forEach(row => {
+            const createdDate = row.getAttribute('data-created');
+            let showRow = true;
+
+            // فلترة حسب التاريخ
+            if (dateFrom && createdDate < dateFrom) showRow = false;
+            if (dateTo && createdDate > dateTo) showRow = false;
+
+            // فلترة حسب البحث
+            if (searchValue !== '') {
+                const customerName = row.getAttribute('data-customer-name').toLowerCase();
+                const customerPhone = row.getAttribute('data-customer-phone').toLowerCase();
+                const customerEmail = row.getAttribute('data-customer-email').toLowerCase();
+                const searchText = customerName + ' ' + customerPhone + ' ' + customerEmail;
+
+                if (!searchText.includes(searchValue)) {
+                    showRow = false;
+                }
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+
+    // البحث في العملاء
+    function searchCustomers() {
+        filterCustomers();
+    }
+
+    // عرض عدد النتائج المفلترة
+    function showFilteredCount() {
+        const rows = document.querySelectorAll('#customersTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                visibleCount++;
+            }
+        });
+
+        khalifaPharmacy.showToast(`عدد العملاء المعروضين: ${visibleCount}`, 'info');
+    }
+
+    // تصدير إلى Excel
+    function exportToExcel() {
+        const rows = document.querySelectorAll('#customersTable tbody tr');
+        let visibleRows = [];
+
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                visibleRows.push(row);
+            }
+        });
+
+        if (visibleRows.length === 0) {
+            khalifaPharmacy.showToast('لا توجد عملاء لتصديرهم', 'warning');
+            return;
+        }
+
+        // إنشاء البيانات للتصدير
+        let csvContent = '\uFEFF'; // BOM for UTF-8
+
+        // العناوين
+        csvContent += 'اسم العميل,رقم الهاتف,البريد الإلكتروني,المصدر,عدد التذاكر,تاريخ التسجيل\n';
+
+        // البيانات
+        visibleRows.forEach(row => {
+            const customerName = row.getAttribute('data-customer-name');
+            const customerPhone = row.getAttribute('data-customer-phone');
+            const customerEmail = row.getAttribute('data-customer-email');
+            const customerSource = row.getAttribute('data-customer-source');
+            const customerTickets = row.getAttribute('data-customer-tickets');
+            const createdDate = row.getAttribute('data-created');
+
+            // ترجمة المصدر
+            let sourceText = customerSource;
+            if (customerSource === 'whatsapp') sourceText = 'WhatsApp';
+            else if (customerSource === 'web') sourceText = 'الموقع';
+
+            // ✅ إضافة ' قبل رقم الهاتف لمنع Excel من تحويله لصيغة علمية
+            csvContent += `"${customerName}","'${customerPhone}","${customerEmail}","${sourceText}","${customerTickets}","${createdDate}"\n`;
+        });
+
+        // إنشاء ملف وتحميله
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        const dateFrom = document.getElementById('dateFrom').value || 'الكل';
+        const dateTo = document.getElementById('dateTo').value || 'الكل';
+        const filename = `عملاء_من_${dateFrom}_إلى_${dateTo}_${new Date().toISOString().split('T')[0]}.csv`;
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        khalifaPharmacy.showToast(`تم تصدير ${visibleRows.length} عميل بنجاح`, 'success');
+    }
+</script>
+{% endblock %}
+

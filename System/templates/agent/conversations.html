@@ -1,0 +1,2882 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "محادثاتي" %}{% endblock %}
+{% block page_title %}{% trans "محادثاتي" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* WhatsApp-like Container */
+    .whatsapp-container {
+        display: flex;
+        height: calc(100vh - 140px);
+        background: #f0f2f5;
+        overflow: hidden;
+        flex-direction: row-reverse; /* عكس الاتجاه */
+    }
+
+    /* Right Sidebar - Customers List (على اليمين بعيداً عن Sidebar) */
+    .customers-sidebar {
+        width: 380px;
+        background: white;
+        border-right: 1px solid #e9edef; /* تغيير من border-left */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customers-sidebar-header {
+        padding: 15px 20px;
+        background: #f0f2f5;
+        border-bottom: 1px solid #e9edef;
+    }
+
+    .customers-sidebar-header h5 {
+        font-weight: 600;
+        color: #111b21;
+    }
+    
+    /* Search Box */
+    .search-box {
+        padding: 10px 15px;
+        background: white;
+    }
+    
+    .search-box .input-group {
+        background: #f0f2f5;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .search-box input {
+        background: #f0f2f5;
+        font-size: 14px;
+    }
+    
+    .search-box input:focus {
+        box-shadow: none;
+        background: white;
+    }
+    
+
+    
+    /* Customers List */
+    .customers-list {
+        flex: 1;
+        overflow-y: auto;
+        background: white;
+    }
+    
+    .customer-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f2f5;
+        transition: background 0.2s;
+    }
+    
+    .customer-item:hover {
+        background: #f5f6f6;
+    }
+    
+    .customer-item.active {
+        background: #f0f2f5;
+    }
+    
+    .customer-item.delayed {
+        background: #fff3cd;
+        border-left: 3px solid #dc3545;
+    }
+    
+    .badge-delayed {
+        display: inline-flex;
+        align-items: center;
+        background: #dc3545;
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: 5px;
+    }
+    
+    .badge-delayed i {
+        font-size: 0.65rem;
+        margin-right: 3px;
+        animation: pulse-warning 2s infinite;
+    }
+    
+    .badge-delayed-triangle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-left: 8px;
+    }
+    
+    .badge-delayed-triangle i {
+        font-size: 1.2rem;
+        color: #dc3545;
+        filter: drop-shadow(0 2px 4px rgba(220, 53, 69, 0.3));
+        animation: pulse-warning 2s infinite;
+    }
+    
+    @keyframes pulse-warning {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.6;
+        }
+    }
+    
+    .customer-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 600;
+        margin-left: 12px;
+        flex-shrink: 0;
+    }
+    
+    .customer-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .customer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+    
+    .customer-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: #111b21;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .message-time {
+        font-size: 12px;
+        color: #667781;
+    }
+    
+    .customer-preview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .last-message {
+        font-size: 14px;
+        color: #667781;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }
+    
+    .badge-delayed {
+        color: #dc3545;
+        font-size: 16px;
+    }
+    
+    /* Chat Area */
+    .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #efeae2;
+        position: relative;
+    }
+    
+    .chat-empty-state {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+    }
+    
+    .chat-empty-state .empty-content {
+        text-align: center;
+        color: #667781;
+    }
+    
+    .chat-empty-state i {
+        font-size: 80px;
+        color: #25d366;
+        margin-bottom: 20px;
+    }
+    
+    .chat-empty-state h5 {
+        font-size: 32px;
+        font-weight: 300;
+        color: #41525d;
+        margin-bottom: 10px;
+    }
+    
+    .chat-empty-state p {
+        font-size: 14px;
+        color: #667781;
+    }
+    
+    /* Chat Header */
+    .chat-header {
+        background: #f0f2f5;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e9edef;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chat-header-left {
+        display: flex;
+        align-items: center;
+    }
+    
+    .chat-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .chat-customer-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: #111b21;
+        margin: 0;
+    }
+    
+    .chat-customer-phone {
+        font-size: 13px;
+        color: #667781;
+    }
+    
+    /* Messages Area */
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23efeae2" width="100" height="100"/></svg>');
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .messages-area {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .message-bubble {
+        max-width: 65%;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .message-bubble.customer {
+        align-self: flex-end; /* رسائل العميل على اليمين */
+    }
+
+    .message-bubble.agent {
+        align-self: flex-start; /* رسائل الموظف على اليسار */
+    }
+
+    .message-content {
+        padding: 8px 12px;
+        border-radius: 8px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message-bubble.customer .message-content {
+        background: white !important;
+        border-radius: 8px 0 8px 8px; /* رسائل العميل على اليمين */
+    }
+
+    .message-bubble.agent .message-content {
+        background: #d9fdd3 !important; /* خلفية خضراء لجميع رسائل الموظف */
+        border-radius: 0 8px 8px 8px; /* رسائل الموظف على اليسار */
+    }
+    
+    .message-text {
+        font-size: 14px;
+        color: #111b21;
+        margin: 0;
+        line-height: 1.5;
+    }
+    
+    .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+    
+    .message-time {
+        font-size: 11px;
+        color: #667781;
+    }
+    
+    .message-sender {
+        font-size: 11px;
+        color: #25d366;
+        font-weight: 500;
+    }
+    
+    /* Message Input */
+    .message-input-container {
+        background: #f0f2f5;
+        padding: 10px 20px;
+        border-top: 1px solid #e9edef;
+    }
+    
+    .message-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .input-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .input-actions button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: #54656f;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .input-actions button:hover {
+        background: #e9edef;
+    }
+    
+    .message-input-box {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 10px 15px;
+        border: none;
+        font-size: 15px;
+        resize: none;
+        max-height: 100px;
+    }
+    
+    .message-input-box:focus {
+        outline: none;
+    }
+    
+    .send-button {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: #25d366;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .send-button:hover {
+        background: #20bd5a;
+    }
+
+    /* Image Preview */
+    .image-preview {
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        margin-top: 10px;
+        position: relative;
+        display: inline-block;
+    }
+
+    .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        display: block;
+    }
+
+    .remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .remove-image:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    /* Message Image */
+    .message-image {
+        max-width: 300px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    /* Audio Player Styles */
+    .message-audio {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 20px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 250px;
+    }
+
+    .audio-icon {
+        width: 36px;
+        height: 36px;
+        background: #25d366;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .audio-player {
+        flex: 1;
+        height: 32px;
+    }
+
+    .audio-player audio {
+        width: 100%;
+        height: 32px;
+    }
+
+    /* Document/File styles */
+    .message-document {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        min-width: 200px;
+    }
+
+    .message-document:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .document-icon {
+        width: 40px;
+        height: 40px;
+        background: #54656f;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .document-info {
+        flex: 1;
+    }
+
+    .document-name {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0;
+        color: #111b21;
+    }
+
+    .document-size {
+        font-size: 12px;
+        color: #667781;
+        margin: 0;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #667781;
+    }
+    
+    .empty-state i {
+        font-size: 60px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+    }
+    
+    .empty-state p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    /* All Conversations Modal Styles */
+    .modal-conversations-container {
+        background: #f8f9fa;
+    }
+
+    .conversation-item {
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+        padding: 15px 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .conversation-item:hover {
+        background: #f8f9fa;
+    }
+
+    .conversation-item.status-closed {
+        opacity: 0.7;
+    }
+
+    .conversation-item.status-delayed {
+        border-left: 4px solid #dc3545;
+    }
+
+    .conversation-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 600;
+        margin-left: 15px;
+        flex-shrink: 0;
+    }
+
+    .conversation-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 5px;
+    }
+
+    .conversation-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: #2c3e50;
+        margin: 0;
+        margin-bottom: 2px;
+    }
+
+    .conversation-phone {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .conversation-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .conversation-status {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .status-open { background: #d4edda; color: #155724; }
+    .status-closed { background: #d6d8db; color: #495057; }
+    .status-delayed { background: #f8d7da; color: #721c24; }
+
+    .conversation-agent {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .conversation-time {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .conversation-message {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 5px 0 0 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .unread-badge {
+        background: #dc3545;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-right: 8px;
+    }
+
+    .ticket-number {
+        font-size: 11px;
+        color: #6c757d;
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+
+    /* Search Highlight Styles */
+    .search-highlight {
+        background: #ffeb3b;
+        color: #333;
+        font-weight: bold;
+        padding: 2px 4px;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(255, 235, 59, 0.5);
+    }
+
+    .search-highlight-pulse {
+        animation: highlightPulse 2s ease-in-out;
+    }
+
+    @keyframes highlightPulse {
+        0% {
+            background-color: #ffeb3b;
+            transform: scale(1);
+        }
+        50% {
+            background-color: #ffc107;
+            transform: scale(1.1);
+        }
+        100% {
+            background-color: #ffeb3b;
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- WhatsApp-like Layout -->
+<div class="whatsapp-container">
+
+    <!-- Left Sidebar: Customers List -->
+    <div class="customers-sidebar">
+
+        <!-- Header -->
+        <div class="customers-sidebar-header">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">{% trans "المحادثات" %}</h5>
+                <div>
+                    <button class="btn btn-sm btn-light rounded-circle" title="{% trans 'جميع المحادثات' %}" data-bs-toggle="modal" data-bs-target="#allConversationsModal">
+                        <i class="fas fa-comment-medical"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Break Buttons -->
+            <div class="d-flex gap-2 mt-2" id="breakButtonsContainer">
+                <button class="btn btn-sm btn-warning flex-fill" id="takeBreakBtn" onclick="takeBreak()" style="display: none;">
+                    <i class="fas fa-coffee"></i> {% trans "أخذ استراحة" %}
+                </button>
+                <button class="btn btn-sm btn-success flex-fill" id="endBreakBtn" onclick="endBreak()" style="display: none;">
+                    <i class="fas fa-play"></i> {% trans "العودة للعمل" %}
+                </button>
+            </div>
+
+            <!-- Break Status Alert -->
+            <div class="alert alert-warning alert-sm mb-0 mt-2" id="breakStatusAlert" style="display: none; font-size: 0.85rem; padding: 8px;">
+                <i class="fas fa-coffee"></i> <span id="breakStatusText">{% trans "أنت في استراحة - لن تستقبل تذاكر جديدة" %}</span>
+            </div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-box">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input
+                    type="text"
+                    class="form-control border-0"
+                    id="searchTickets"
+                    placeholder="{% trans 'ابحث عن محادثة...' %}"
+                    onkeyup="searchTickets()"
+                >
+            </div>
+        </div>
+
+
+
+        <!-- Customers List -->
+        <div class="customers-list" id="ticketsList">
+            {% for conv in conversations %}
+            <div class="customer-item {% if conv.has_delayed %}delayed{% endif %}"
+                 data-customer-id="{{ conv.customer.id }}"
+                 data-delayed="{{ conv.has_delayed|yesno:'true,false' }}"
+                 onclick="loadCustomerConversation({{ conv.customer.id }}, this)">
+
+                <div class="customer-avatar">
+                    {{ conv.customer.name|slice:":1"|upper }}
+                </div>
+
+                <div class="customer-info">
+                    <div class="customer-header">
+                        <h6 class="customer-name">
+                            {{ conv.customer.name }}
+                            {% if conv.has_transfer %}
+                            <span style="color: #007bff; font-size: 14px;" title="تم تحويل التذكرة">🔄</span>
+                            {% endif %}
+                        </h6>
+                        <span class="message-time">{{ conv.last_message_at|date:"H:i"|default:"--:--" }}</span>
+                    </div>
+                    <div class="customer-preview">
+                        <p class="last-message">{{ conv.customer.phone_number }} 
+                            {% if conv.unread_count > 0 %}
+                            <span class="badge bg-danger" style="font-size: 10px; padding: 2px 6px;">{{ conv.unread_count }} {% trans "غير مقروءة" %}</span>
+                            {% endif %}
+                        </p>
+                        {% if conv.has_delayed %}
+                        <span class="badge-delayed-triangle">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                        {% endif %}
+                        <!-- Debug: has_delayed={{ conv.has_delayed }}
+                        {% for ticket in conv.tickets %}
+                        Ticket #{{ ticket.id }}: 
+                        last_customer={{ ticket.last_customer_message_at|date:"Y-m-d H:i:s"|default:"None" }}
+                        last_agent={{ ticket.last_agent_message_at|date:"Y-m-d H:i:s"|default:"None" }}
+                        is_delayed={{ ticket.is_delayed }}
+                        {% endfor %}
+                        -->
+                    </div>
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>{% trans "لا توجد محادثات" %}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area" id="conversationArea">
+
+        <!-- Empty State -->
+        <div class="chat-empty-state" id="emptyState">
+            <div class="empty-content">
+                <i class="fab fa-whatsapp"></i>
+                <h5>{% trans "WhatsApp للأعمال" %}</h5>
+                <p>{% trans "اختر محادثة من القائمة للبدء" %}</p>
+            </div>
+        </div>
+
+        <!-- Chat Header (Hidden by default) -->
+        <div class="chat-header d-none" id="chatHeader">
+            <!-- Alias for conversations.js compatibility -->
+            <div class="d-none" id="conversationHeader"></div>
+            <div class="chat-header-left">
+                <button class="btn btn-sm btn-warning" onclick="showTransferModal()" title="{% trans 'تحويل المحادثة' %}">
+                    <i class="fas fa-exchange-alt"></i> {% trans "تحويل" %}
+                </button>
+            </div>
+            <div class="chat-header-info">
+                <div class="chat-avatar" id="chatAvatar">C</div>
+                <div>
+                    <div class="chat-customer-name" id="chatCustomerName">{% trans "اسم العميل" %}</div>
+                    <div class="chat-customer-phone" id="chatCustomerPhone">+20 123 456 7890</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-danger" onclick="closeTicket()">
+                    <i class="fas fa-times-circle"></i> {% trans "إغلاق" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Container (Hidden by default) -->
+        <div class="messages-container d-none" id="messagesContainer">
+            <!-- Messages Area for conversations.js compatibility -->
+            <div class="messages-area" id="messagesArea">
+                <!-- Messages will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Message Input (Hidden by default) -->
+        <div class="message-input-container d-none" id="messageInputContainer">
+            <!-- Alias for conversations.js compatibility -->
+            <div class="d-none" id="messageInput"></div>
+            <form onsubmit="sendMessage(event)" id="messageForm">
+                <div class="message-input-wrapper">
+                    <div class="input-actions">
+                        <button type="button" onclick="openTemplatesModal()" title="{% trans 'القوالب' %}">
+                            <i class="fas fa-file-alt"></i>
+                        </button>
+                        <button type="button" onclick="openFileUpload()" title="{% trans 'إرفاق صورة' %}">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                    </div>
+                    <textarea
+                        class="message-input-box"
+                        id="messageText"
+                        placeholder="{% trans 'اكتب رسالة...' %}"
+                        rows="1"
+                        onkeydown="handleEnter(event)"
+                    ></textarea>
+                    <button type="submit" class="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <!-- Image Preview -->
+                <div id="imagePreview" class="image-preview d-none">
+                    <img id="previewImg" src="" alt="Preview">
+                    <button type="button" onclick="removeImage()" class="remove-image">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Templates Modal -->
+<div class="modal fade" id="templatesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl" style="max-width:95vw;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt"></i> {% trans "اختر قالب" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height:80vh; overflow:auto;">
+                <div id="templatesList">
+                    <p class="text-muted">{% trans "جاري تحميل القوالب..." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt"></i> {% trans "تحويل المحادثة" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="transferToAgent" class="form-label">{% trans "اختر الموظف المحول إليه:" %}</label>
+                    <select class="form-select" id="transferToAgent" required>
+                        <option value="">{% trans "اختر موظف..." %}</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="transferNote" class="form-label">{% trans "ملاحظة التحويل (اختيارية):" %}</label>
+                    <textarea class="form-control" id="transferNote" rows="3" placeholder="{% trans 'اكتب ملاحظة حول سبب التحويل...' %}"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إلغاء" %}</button>
+                <button type="button" class="btn btn-warning" onclick="executeTransfer()">
+                    <i class="fas fa-exchange-alt"></i> {% trans "تحويل" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Conversations Modal -->
+<div class="modal fade" id="allConversationsModal" tabindex="-1" aria-labelledby="allConversationsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="allConversationsModalLabel">{% trans "جميع المحادثات" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'إغلاق' %}"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Search and Filter Bar -->
+                <div class="border-bottom p-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="allConversationsSearch" placeholder="{% trans 'البحث برقم الهاتف أو نص الرسالة...' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">{% trans "جميع الحالات" %}</option>
+                                <option value="open">{% trans "مفتوحة" %}</option>
+                                <option value="closed">{% trans "مغلقة" %}</option>
+                                <option value="delayed">{% trans "متأخرة" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="agentFilter">
+                                <option value="">{% trans "جميع الموظفين" %}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversations List -->
+                <div class="modal-conversations-container" style="height: 500px; overflow-y: auto;">
+                    <div id="allConversationsLoading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">{% trans "جار التحميل..." %}</span>
+                        </div>
+                    </div>
+                    <div id="allConversationsList" class="d-none">
+                        <!-- Conversations will be loaded here -->
+                    </div>
+                    <div id="allConversationsEmpty" class="text-center py-5 d-none">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">{% trans "لا توجد محادثات" %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted" id="conversationsCount">0 {% trans "محادثة" %}</small>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary me-2" id="loadMoreConversations" style="display: none;">
+                            {% trans "تحميل المزيد" %}
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إغلاق" %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentCustomerId = null;
+    let currentTicketId = null;
+    let currentCustomer = null; // ✅ لحفظ بيانات العميل الحالي
+    let currentAgentName = '{{ request.user.full_name }}'; // ✅ اسم الموظف الحالي
+    let messagesPolling = null;
+    let conversationsRefreshInterval = null; // ✅ للتحديث التلقائي
+
+    // ============================================
+    // 🚀 Auto-Refresh Conversations List
+    // ============================================
+
+    /**
+     * تحديث قائمة المحادثات تلقائياً
+     */
+    async function refreshConversationsList() {
+        try {
+            const response = await khalifaPharmacy.apiRequest('/api/conversations/', 'GET');
+            
+            if (!response || !response.conversations) {
+                return;
+            }
+            
+            const conversationsList = document.querySelector('.customers-list');
+            if (!conversationsList) {
+                return;
+            }
+            
+            // حفظ المحادثة النشطة الحالية
+            const activeConversation = document.querySelector('.customer-item.active');
+            const activeCustomerId = activeConversation ? activeConversation.getAttribute('data-customer-id') : null;
+            
+            // مسح القائمة الحالية
+            conversationsList.innerHTML = '';
+            
+            // إضافة المحادثات الجديدة
+            response.conversations.forEach(conv => {
+                const conversationItem = createConversationItem(conv);
+                conversationsList.appendChild(conversationItem);
+            });
+            
+            // إعادة تفعيل المحادثة النشطة
+            if (activeCustomerId) {
+                const newActiveItem = document.querySelector(`.customer-item[data-customer-id="${activeCustomerId}"]`);
+                if (newActiveItem) {
+                    newActiveItem.classList.add('active');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error refreshing conversations:', error);
+        }
+    }
+
+    /**
+     * إنشاء عنصر محادثة
+     */
+    function createConversationItem(conv) {
+        const item = document.createElement('div');
+        item.className = 'customer-item';
+        if (conv.is_delayed) {
+            item.classList.add('delayed');
+        }
+        
+        item.setAttribute('data-customer-id', conv.customer_id);
+        item.setAttribute('data-status', conv.status);
+        item.setAttribute('data-delayed', conv.is_delayed ? 'true' : 'false');
+        
+        item.onclick = function() {
+            loadCustomerConversation(conv.customer_id, this);
+        };
+        
+        // حساب الوقت النسبي
+        const timeAgo = conv.last_message_time ? calculateTimeAgo(conv.last_message_time) : '--:--';
+        
+        item.innerHTML = `
+            <div class="customer-avatar">${(conv.customer_name || 'ع').charAt(0).toUpperCase()}</div>
+            <div class="customer-info">
+                <div class="customer-header">
+                    <h6 class="customer-name">${conv.customer_name || 'عميل'}</h6>
+                    <span class="message-time">${timeAgo}</span>
+                </div>
+                <div class="customer-preview">
+                    <p class="last-message">${conv.customer_phone || ''}
+                        ${conv.unread_count > 0 ? `<span class="badge bg-danger" style="font-size: 10px; padding: 2px 6px;">${conv.unread_count} غير مقروءة</span>` : ''}
+                    </p>
+                    ${conv.is_delayed ? '<span class="badge-delayed-triangle"><i class="fas fa-exclamation-triangle"></i></span>' : ''}
+                </div>
+            </div>
+        `;
+        
+        return item;
+    }
+
+    /**
+     * حساب الوقت النسبي
+     */
+    function calculateTimeAgo(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'الآن';
+        if (diffMins < 60) return `${diffMins} د`;
+        if (diffHours < 24) return `${diffHours} س`;
+        return `${diffDays} يوم`;
+    }
+
+    /**
+     * بدء التحديث التلقائي للمحادثات
+     */
+    function startConversationsRefresh() {
+        // مسح أي interval موجود
+        if (conversationsRefreshInterval) {
+            clearInterval(conversationsRefreshInterval);
+        }
+        
+        // ✅ تحديث فوري أول مرة
+        refreshConversationsList();
+        
+        // تحديث كل 5 ثواني ⚡
+        conversationsRefreshInterval = setInterval(() => {
+            refreshConversationsList();
+        }, 5000); // 5 seconds
+        
+        console.log('✅ Auto-refresh enabled: Conversations will update every 5 seconds');
+    }
+
+    /**
+     * إيقاف التحديث التلقائي للمحادثات
+     */
+    function stopConversationsRefresh() {
+        if (conversationsRefreshInterval) {
+            clearInterval(conversationsRefreshInterval);
+            conversationsRefreshInterval = null;
+        }
+    }
+
+    // ============================================
+    // End Auto-Refresh Code
+    // ============================================
+
+    // Load customer conversation (all tickets)
+    async function loadCustomerConversation(customerId, element) {
+        console.log('🔄 loadCustomerConversation called with customerId:', customerId);
+        
+        try {
+            currentCustomerId = customerId;
+            
+            // Clear displayed messages when loading new conversation
+            displayedMessages.clear();
+
+            // Update active state
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+
+            // Hide empty state
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                emptyState.classList.add('d-none');
+                console.log('✅ Hidden empty state');
+            }
+
+            // Show chat components
+            const chatHeader = document.getElementById('chatHeader');
+            const messagesContainer = document.getElementById('messagesContainer');  
+            const messageInputContainer = document.getElementById('messageInputContainer');
+
+            if (chatHeader) {
+                chatHeader.classList.remove('d-none');
+                console.log('✅ Shown chat header');
+            } else {
+                console.error('❌ chatHeader not found');
+            }
+
+            if (messagesContainer) {
+                messagesContainer.classList.remove('d-none');
+                console.log('✅ Shown messages container');
+            } else {
+                console.error('❌ messagesContainer not found');
+            }
+
+            if (messageInputContainer) {
+                messageInputContainer.classList.remove('d-none');
+                console.log('✅ Shown message input container');
+            } else {
+                console.error('❌ messageInputContainer not found');
+            }
+
+            // Load customer details
+            console.log('📞 Fetching customer details...');
+            const response = await fetch(`/api/customers/${customerId}/`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const customer = await response.json();
+            console.log('👤 Customer loaded:', customer);
+
+            console.log('Customer data:', customer);
+
+            // ✅ حفظ بيانات العميل الحالي
+            currentCustomer = customer;
+
+            // Update header
+            const customerName = customer.name || 'عميل';
+            const customerPhone = customer.phone_number || '';
+
+            document.getElementById('chatAvatar').textContent = customerName.charAt(0).toUpperCase();
+            document.getElementById('chatCustomerName').textContent = customerName;
+            document.getElementById('chatCustomerPhone').textContent = customerPhone;
+
+            // Ensure UI is fully visible before loading messages
+            console.log('🔍 Verifying UI visibility...');
+            console.log('chatHeader visible:', !chatHeader.classList.contains('d-none'));
+            console.log('messagesContainer visible:', !messagesContainer.classList.contains('d-none'));
+            console.log('messageInputContainer visible:', !messageInputContainer.classList.contains('d-none'));
+
+            // Load messages from all customer tickets
+            await loadCustomerMessages(customerId);
+
+            // Mark all customer messages as read
+            await markCustomerMessagesAsRead(customerId);
+
+            // Start polling for new messages
+            if (messagesPolling) {
+                clearInterval(messagesPolling);
+            }
+            messagesPolling = setInterval(() => loadCustomerMessages(customerId), 3000);
+
+        } catch (error) {
+            console.error('❌ Error loading conversation:', error);
+            console.error('❌ Stack trace:', error.stack);
+            
+            // Show toast if khalifaPharmacy is available, otherwise just alert
+            if (typeof khalifaPharmacy !== 'undefined' && khalifaPharmacy.showToast) {
+                khalifaPharmacy.showToast('حدث خطأ أثناء تحميل المحادثة: ' + error.message, 'error');
+            } else {
+                alert('حدث خطأ أثناء تحميل المحادثة: ' + error.message);
+            }
+        }
+    }
+
+    // Load messages from all customer tickets
+    // Text highlighting functionality
+    function highlightSearchText(text, searchQuery) {
+        if (!searchQuery || !text) return escapeHtml(text);
+        
+        const escapedText = escapeHtml(text);
+        const escapedQuery = escapeHtml(searchQuery);
+        
+        // Create case-insensitive regex
+        const regex = new RegExp(`(${escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        
+        return escapedText.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+    
+    // Scroll to first highlighted text
+    function scrollToHighlight() {
+        setTimeout(() => {
+            const firstHighlight = document.querySelector('.search-highlight');
+            if (firstHighlight) {
+                firstHighlight.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                // Add pulse effect
+                firstHighlight.classList.add('search-highlight-pulse');
+                setTimeout(() => {
+                    firstHighlight.classList.remove('search-highlight-pulse');
+                }, 2000);
+            }
+        }, 500); // Wait for messages to render
+    }
+
+    async function loadCustomerMessages(customerId) {
+        try {
+            console.log('🔄 Loading messages for customer:', customerId);
+            
+            // Get all tickets for this customer
+            console.log(`📞 Fetching tickets for customer ${customerId}...`);
+            const ticketsResponse = await fetch(`/api/tickets/?customer=${customerId}`);
+            
+            if (!ticketsResponse.ok) {
+                throw new Error(`Failed to fetch tickets: HTTP ${ticketsResponse.status}`);
+            }
+            
+            const ticketsData = await ticketsResponse.json();
+            console.log('📋 Raw tickets data:', ticketsData);
+            
+            const tickets = ticketsData.results || ticketsData;
+            
+            if (!Array.isArray(tickets)) {
+                console.error('❌ Tickets data is not an array:', tickets);
+                throw new Error('Invalid tickets data format');
+            }
+            
+            console.log('📋 Found tickets:', tickets.length, tickets);
+
+            // Get the first open ticket for sending messages
+            const openTicket = tickets.find(t => t.status === 'open');
+            currentTicketId = openTicket ? openTicket.id : (tickets[0] ? tickets[0].id : null);
+            
+            // Check if all tickets are closed
+            const allTicketsClosed = tickets.length > 0 && tickets.every(t => t.status === 'closed');
+            
+            console.log('🔍 Checking ticket status:', {
+                totalTickets: tickets.length,
+                allClosed: allTicketsClosed,
+                ticketStatuses: tickets.map(t => ({ id: t.id, status: t.status }))
+            });
+            
+            // Track previous state to detect status change
+            if (!window.customerTicketStates) {
+                window.customerTicketStates = {};
+            }
+            
+            const previousState = window.customerTicketStates[customerId];
+            window.customerTicketStates[customerId] = allTicketsClosed;
+            
+            // Show notification only when:
+            // 1. First time opening this customer's conversation
+            // 2. All tickets are closed
+            // 3. Haven't shown notification for this customer yet
+            if (allTicketsClosed && previousState === undefined) {
+                console.log('📢 First time opening closed ticket - showing notification');
+                khalifaPharmacy.showToast('هذه التذكرة مغلقة - إرسال رسالة سيعيد فتحها تلقائياً', 'info', 5000);
+            }
+
+            // Collect all messages from all tickets
+            let allMessages = [];
+            for (const ticket of tickets) {
+                try {
+                    console.log(`📨 Loading messages for ticket ${ticket.id}`);
+                    const messagesResponse = await fetch(`/api/messages/?ticket=${ticket.id}`);
+                    
+                    if (!messagesResponse.ok) {
+                        console.error(`❌ Failed to fetch messages for ticket ${ticket.id}: HTTP ${messagesResponse.status}`);
+                        continue;
+                    }
+                    
+                    const messagesData = await messagesResponse.json();
+                    console.log(`📋 Raw messages data for ticket ${ticket.id}:`, messagesData);
+                    
+                    const messages = messagesData.results || messagesData;
+                    
+                    if (!Array.isArray(messages)) {
+                        console.error(`❌ Messages data is not an array for ticket ${ticket.id}:`, messages);
+                        continue;
+                    }
+                    
+                    console.log(`💬 Found ${messages.length} messages for ticket ${ticket.id}:`, messages);
+                    allMessages = allMessages.concat(messages);
+                } catch (error) {
+                    console.error(`❌ Error loading messages for ticket ${ticket.id}:`, error);
+                }
+            }
+
+            console.log('📨 Total messages loaded:', allMessages.length);
+
+            // Sort messages by creation time
+            allMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+            const container = document.getElementById('messagesArea');
+            if (!container) {
+                console.error('❌ messagesArea container not found');
+                return;
+            }
+            console.log('✅ messagesArea container found:', container);
+            
+            const previousScrollHeight = container.scrollHeight;
+            const wasAtBottom = container.scrollTop + container.clientHeight >= previousScrollHeight - 50;
+            
+            container.innerHTML = '';
+            console.log('🧹 Cleared container, now adding', allMessages.length, 'messages');
+
+            if (allMessages.length === 0) {
+                console.log('⚠️ No messages to display');
+                container.innerHTML = '<div class="text-center text-muted py-5">لا توجد رسائل في هذه المحادثة</div>';
+                return;
+            }
+
+            allMessages.forEach((message, index) => {
+                console.log(`➕ Adding message ${index + 1}:`, message.message_text || message.content);
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message-bubble ${message.sender_type}`;
+
+                let contentHtml = '';
+
+                // إذا كانت الرسالة تحتوي على صورة
+                if (message.message_type === 'image' && message.media_url) {
+                    const messageText = message.message_text || '';
+                    const searchQuery = window.currentSearchHighlight ? window.currentSearchHighlight.query : '';
+                    const shouldHighlight = searchQuery && window.currentSearchHighlight && window.currentSearchHighlight.inMessages;
+                    
+                    const processedText = shouldHighlight && messageText ? 
+                        highlightSearchText(messageText, searchQuery) : 
+                        escapeHtml(messageText);
+                    
+                    contentHtml = `
+                        <div class="message-content" data-message-id="${message.id}">
+                            <img src="${message.media_url}" alt="صورة" class="message-image" onclick="window.open('${message.media_url}', '_blank')">
+                            ${messageText ? `<p class="message-text">${processedText}</p>` : ''}
+                            <div class="message-meta">
+                                ${message.sender_type === 'agent' && message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                                <span class="message-time">${formatTime(message.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+                } 
+                // إذا كانت الرسالة صوتية (audio أو ptt)
+                else if ((message.message_type === 'audio' || message.message_type === 'ptt') && message.media_url) {
+                    const messageText = message.message_text || '';
+                    const searchQuery = window.currentSearchHighlight ? window.currentSearchHighlight.query : '';
+                    const shouldHighlight = searchQuery && window.currentSearchHighlight && window.currentSearchHighlight.inMessages;
+                    
+                    const processedText = shouldHighlight && messageText ? 
+                        highlightSearchText(messageText, searchQuery) : 
+                        escapeHtml(messageText);
+                    
+                    contentHtml = `
+                        <div class="message-content" data-message-id="${message.id}">
+                            <div class="message-audio">
+                                <div class="audio-icon">
+                                    <i class="fas fa-microphone"></i>
+                                </div>
+                                <div class="audio-player">
+                                    <audio controls preload="metadata">
+                                        <source src="${message.media_url}" type="${message.mime_type || 'audio/ogg'}">
+                                        متصفحك لا يدعم تشغيل الملفات الصوتية
+                                    </audio>
+                                </div>
+                            </div>
+                            ${messageText ? `<p class="message-text">${processedText}</p>` : ''}
+                            <div class="message-meta">
+                                ${message.sender_type === 'agent' && message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                                <span class="message-time">${formatTime(message.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                // إذا كانت الرسالة مستند أو فيديو
+                else if ((message.message_type === 'document' || message.message_type === 'video' || message.message_type === 'file') && message.media_url) {
+                    const fileName = message.message_text || message.media_url.split('/').pop() || 'ملف';
+                    const fileIcon = message.message_type === 'video' ? 'fa-video' : 'fa-file';
+                    
+                    contentHtml = `
+                        <div class="message-content">
+                            <a href="${message.media_url}" target="_blank" class="message-document">
+                                <div class="document-icon">
+                                    <i class="fas ${fileIcon}"></i>
+                                </div>
+                                <div class="document-info">
+                                    <p class="document-name">${escapeHtml(fileName)}</p>
+                                    <p class="document-size">${message.message_type}</p>
+                                </div>
+                            </a>
+                            <div class="message-meta">
+                                ${message.sender_type === 'agent' && message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                                <span class="message-time">${formatTime(message.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                else {
+                    // رسالة نصية عادية
+                    const messageText = message.message_text || message.content || '';
+                    const searchQuery = window.currentSearchHighlight ? window.currentSearchHighlight.query : '';
+                    const shouldHighlight = searchQuery && window.currentSearchHighlight && window.currentSearchHighlight.inMessages;
+                    
+                    const processedText = shouldHighlight ? 
+                        highlightSearchText(messageText, searchQuery) : 
+                        escapeHtml(messageText);
+                    
+                    contentHtml = `
+                        <div class="message-content" data-message-id="${message.id}">
+                            <p class="message-text">${processedText}</p>
+                            <div class="message-meta">
+                                ${message.sender_type === 'agent' && message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                                <span class="message-time">${formatTime(message.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                messageDiv.innerHTML = contentHtml;
+                container.appendChild(messageDiv);
+            });
+
+            // Handle scrolling - either to highlights or to bottom
+            if (window.currentSearchHighlight && window.currentSearchHighlight.inMessages && window.currentSearchHighlight.query) {
+                // Scroll to first highlight
+                scrollToHighlight();
+                // Clear search highlight after use
+                window.currentSearchHighlight = null;
+            } else if (wasAtBottom) {
+                // Scroll to bottom only if was at bottom before
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            // Track last message ID for auto-refresh
+            if (allMessages.length > 0) {
+                lastMessageId = Math.max(...allMessages.map(m => m.id));
+            }
+            
+            // Start auto-refresh for new messages
+            startMessageAutoRefresh(customerId);
+
+        } catch (error) {
+            console.error('❌ Error loading messages:', error);
+            console.error('❌ Stack trace:', error.stack);
+            
+            // Show error message to user
+            const container = document.getElementById('messagesArea');
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger text-center">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <br>فشل تحميل الرسائل
+                        <br><small>${error.message}</small>
+                        <br><button class="btn btn-sm btn-primary mt-2" onclick="loadCustomerMessages(${currentCustomerId})">إعادة المحاولة</button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // Mark all messages from customer as read
+    async function markCustomerMessagesAsRead(customerId) {
+        try {
+            const response = await fetch('/api/messages/mark_customer_messages_read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    customer_id: customerId
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Marked messages as read:', data.message);
+                
+                // Update the badge count in the UI
+                const customerElement = document.querySelector(`.customer-item[onclick*="${customerId}"]`);
+                if (customerElement) {
+                    const badge = customerElement.querySelector('.badge-danger');
+                    if (badge) {
+                        badge.remove();
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+        }
+    }
+
+    // Global variable for selected image
+    let selectedImage = null;
+
+    // Send message
+    async function sendMessage(event) {
+        event.preventDefault();
+
+        const messageText = document.getElementById('messageText');
+        const content = messageText.value.trim();
+
+        // التحقق من وجود نص أو صورة
+        if ((!content && !selectedImage) || !currentTicketId) return;
+        
+        // ✅ Optimistic update - show message immediately
+        let finalMessage = content;
+        if (content && currentAgentName) {
+            finalMessage = finalMessage.replace(/{name}/g, currentAgentName);
+        }
+        
+        if (!selectedImage && finalMessage) {
+            // Add message to UI immediately for text messages
+            addMessageToUI({
+                content: finalMessage,
+                sender_type: 'agent',
+                sender_name: currentAgentName,
+                message_type: 'text',
+                created_at: new Date().toISOString()
+            });
+            
+            // Clear input immediately
+            messageText.value = '';
+            messageText.style.height = 'auto';
+        }
+
+        try {
+            // إذا كانت هناك صورة، نرسلها عبر /api/messages/ مع FormData
+            if (selectedImage) {
+                // Stop auto-refresh temporarily to prevent duplicates
+                if (messagesPolling) {
+                    clearInterval(messagesPolling);
+                    messagesPolling = null;
+                }
+                
+                // ✅ استبدال {name} باسم الموظف المرسل
+                let finalMessage = content;
+                if (content && currentAgentName) {
+                    finalMessage = finalMessage.replace(/{name}/g, currentAgentName);
+                }
+
+                const formData = new FormData();
+                formData.append('ticket', currentTicketId);
+                formData.append('sender_type', 'agent');
+                formData.append('image', selectedImage);
+                formData.append('message_type', 'image');
+                if (finalMessage) {
+                    formData.append('message_text', finalMessage);
+                }
+
+                const response = await fetch(`/api/messages/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    removeImage();
+                    // Refresh to get the actual message from server
+                    await loadCustomerMessages(currentCustomerId);
+                    // Restart auto-refresh after refresh
+                    if (currentCustomerId && !messagesPolling) {
+                        messagesPolling = setInterval(() => loadCustomerMessages(currentCustomerId), 3000);
+                    }
+                } else {
+                    let errorMessage = 'فشل إرسال الصورة';
+                    try {
+                        const errorData = await response.json();
+                        console.error('Error response:', errorData);
+                        errorMessage = errorData.detail || errorData.error || errorMessage;
+                    } catch (e) {
+                        // إذا لم يكن الـ response JSON، نستخدم الرسالة الافتراضية
+                        const errorText = await response.text();
+                        console.error('Error response (not JSON):', errorText);
+                    }
+                    throw new Error(errorMessage);
+                }
+            } else {
+                // رسالة نصية فقط - نرسلها عبر WhatsApp API
+                // ✅ استبدال {name} باسم الموظف المرسل
+                let finalMessage = content;
+                if (currentAgentName) {
+                    finalMessage = finalMessage.replace(/{name}/g, currentAgentName);
+                }
+
+                const response = await fetch(`/api/whatsapp/send/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        ticket_id: currentTicketId,
+                        message: finalMessage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // ✅ إذا تم إنشاء تذكرة جديدة، قم بتحديث currentTicketId
+                    const oldTicketId = currentTicketId;
+                    if (data.ticket_id && String(data.ticket_id) !== String(oldTicketId)) {
+                        console.log(`🎫 New ticket created: ${data.ticket_number} (ID: ${data.ticket_id})`);
+                        console.log(`   Old ticket ID: ${oldTicketId} → New ticket ID: ${data.ticket_id}`);
+                        currentTicketId = data.ticket_id;
+                        khalifaPharmacy.showToast(`تم إنشاء تذكرة جديدة: ${data.ticket_number}`, 'info', 4000);
+                    }
+                    // Restart auto-refresh after 3 seconds
+                    setTimeout(() => {
+                        if (currentCustomerId && !messagesPolling) {
+                            messagesPolling = setInterval(() => loadCustomerMessages(currentCustomerId), 3000);
+                        }
+                    }, 3000);
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            khalifaPharmacy.showToast('حدث خطأ أثناء إرسال الرسالة: ' + error.message, 'error');
+        }
+    }
+
+    // Track displayed messages to prevent duplicates (using content+time hash)
+    let displayedMessages = new Set();
+    
+    // Add message to UI immediately (optimistic update)
+    function addMessageToUI(message) {
+        const messagesArea = document.getElementById('messagesArea');
+        if (!messagesArea) return;
+        
+        // Create unique hash from content + sender + time
+        const messageHash = `${message.content}_${message.sender_type}_${message.created_at}`;
+        
+        // Check if message already exists
+        if (displayedMessages.has(messageHash)) {
+            return; // Skip duplicate message
+        }
+        
+        displayedMessages.add(messageHash);
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message-bubble agent';
+        messageDiv.setAttribute('data-message-hash', messageHash);
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <p class="message-text">${escapeHtml(message.content)}</p>
+                <div class="message-meta">
+                    ${message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                    <span class="message-time">${formatTime(message.created_at)}</span>
+                </div>
+            </div>
+        `;
+        
+        messagesArea.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        const messagesContainer = document.getElementById('messagesContainer');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+    
+    // Create message element for a single message
+    function createMessageElement(message) {
+        // Create unique hash from content + sender + time
+        const messageHash = `${message.message_text || message.content}_${message.sender_type}_${message.created_at}`;
+        
+        // Check if message already exists
+        if (displayedMessages.has(messageHash)) {
+            return null; // Skip duplicate message
+        }
+        
+        displayedMessages.add(messageHash);
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message-bubble ${message.sender_type}`;
+        messageDiv.setAttribute('data-message-hash', messageHash);
+        
+        let contentHtml = '';
+        const messageText = message.message_text || message.content || '';
+        
+        // Text message
+        contentHtml = `
+            <div class="message-content" data-message-id="${message.id || ''}">
+                <p class="message-text">${escapeHtml(messageText)}</p>
+                <div class="message-meta">
+                    ${message.sender_type === 'agent' && message.sender_name ? `<span class="message-sender">${message.sender_name}</span> • ` : ''}
+                    <span class="message-time">${formatTime(message.created_at)}</span>
+                </div>
+            </div>
+        `;
+        
+        messageDiv.innerHTML = contentHtml;
+        return messageDiv;
+    }
+    
+    // Load only new messages (for auto-refresh without affecting timestamps)
+    let lastMessageId = 0;
+    let autoRefreshInterval = null;
+    
+    async function loadNewMessagesOnly(customerId) {
+        if (!currentTicketId) return;
+        
+        try {
+            // Check ticket status first
+            const ticketResponse = await fetch(`/api/tickets/${currentTicketId}/`);
+            
+            // If ticket not found (404), stop refresh
+            if (ticketResponse.status === 404) {
+                stopMessageAutoRefresh();
+                console.log('Ticket not found, stopping auto-refresh');
+                return;
+            }
+            
+            if (ticketResponse.ok) {
+                const ticket = await ticketResponse.json();
+                
+                // If ticket is closed, just stop refresh (no repeated notifications)
+                if (ticket.status === 'closed') {
+                    stopMessageAutoRefresh();
+                    return;
+                }
+            }
+            
+            // Load new messages
+            const response = await fetch(`/api/messages/?ticket=${currentTicketId}&id__gt=${lastMessageId}`);
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            const newMessages = data.results || data;
+            
+            if (newMessages.length > 0) {
+                const messagesArea = document.getElementById('messagesArea');
+                if (!messagesArea) return;
+                
+                newMessages.forEach(message => {
+                    // Only add customer messages (agent messages already added optimistically)
+                    if (message.sender_type === 'customer') {
+                        const messageDiv = createMessageElement(message);
+                        if (messageDiv) {  // Only add if not duplicate
+                            messagesArea.appendChild(messageDiv);
+                        }
+                    }
+                    lastMessageId = Math.max(lastMessageId, message.id);
+                });
+                
+                const messagesContainer = document.getElementById('messagesContainer');
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading new messages:', error);
+        }
+    }
+    
+    // Start auto-refresh for new messages
+    function startMessageAutoRefresh(customerId) {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+        
+        autoRefreshInterval = setInterval(() => {
+            if (currentCustomerId) {
+                loadNewMessagesOnly(currentCustomerId);
+            }
+        }, 3000); // Every 3 seconds
+    }
+    
+    // Stop auto-refresh
+    function stopMessageAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+
+    // Handle Enter key
+    function handleEnter(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(event);
+        }
+    }
+
+    // Open file upload dialog
+    function openFileUpload() {
+        document.getElementById('imageUpload').click();
+    }
+
+    // Handle image selection
+    function handleImageSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // التحقق من نوع الملف
+        if (!file.type.startsWith('image/')) {
+            khalifaPharmacy.showToast('يرجى اختيار صورة فقط', 'error');
+            return;
+        }
+
+        // التحقق من حجم الملف (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            khalifaPharmacy.showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+            return;
+        }
+
+        selectedImage = file;
+
+        // عرض معاينة الصورة
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Remove selected image
+    function removeImage() {
+        selectedImage = null;
+        document.getElementById('imageUpload').value = '';
+        document.getElementById('imagePreview').classList.add('d-none');
+        document.getElementById('previewImg').src = '';
+    }
+
+    // Search tickets
+    function searchTickets() {
+        const searchValue = document.getElementById('searchTickets').value.toLowerCase().trim();
+        const items = document.querySelectorAll('.customer-item');
+
+        items.forEach(item => {
+            const name = item.querySelector('.customer-name').textContent.toLowerCase();
+            const phone = item.querySelector('.last-message').textContent.toLowerCase();
+
+            if (name.includes(searchValue) || phone.includes(searchValue)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Transfer functionality
+    async function showTransferModal() {
+        if (!currentCustomerId) {
+            khalifaPharmacy.showToast('يرجى اختيار محادثة أولاً', 'error');
+            return;
+        }
+
+        try {
+            // Load available agents
+            const data = await khalifaPharmacy.apiRequest('/api/available-agents/', 'GET');
+            const agentSelect = document.getElementById('transferToAgent');
+            
+            // Clear existing options
+            agentSelect.innerHTML = '<option value="">اختر موظف...</option>';
+            
+            // Check if there are available agents
+            if (!data.agents || data.agents.length === 0) {
+                agentSelect.innerHTML = '<option value="">لا يوجد موظفين متاحين حالياً</option>';
+                khalifaPharmacy.showToast('لا يوجد موظفين متاحين للتحويل (جميعهم في استراحة أو غير متصلين)', 'warning');
+                return;
+            }
+            
+            // Add agents to select
+            data.agents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.id;
+                
+                // Display agent name with status and ticket count
+                const statusIcon = agent.is_online ? '🟢' : '⚪';
+                const ticketCount = ` (${agent.current_active_tickets}/${agent.max_capacity})`;
+                
+                option.textContent = `${agent.name} ${statusIcon}${ticketCount}`;
+                agentSelect.appendChild(option);
+            });
+
+            // Show modal
+            const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+            transferModal.show();
+
+        } catch (error) {
+            console.error('Transfer Modal Error:', error);
+            console.error('Error message:', error.message);
+            khalifaPharmacy.showToast('حدث خطأ في تحميل قائمة الموظفين: ' + error.message, 'error');
+            
+            // Debug: Try the debug endpoint
+            try {
+                const debugResponse = await khalifaPharmacy.apiRequest('/api/debug-agents/', 'GET');
+                console.log('Debug agents response:', debugResponse);
+            } catch (debugError) {
+                console.error('Debug endpoint also failed:', debugError);
+            }
+        }
+    }
+
+    async function executeTransfer() {
+        const toAgentId = document.getElementById('transferToAgent').value;
+        const note = document.getElementById('transferNote').value;
+
+        if (!toAgentId) {
+            khalifaPharmacy.showToast('يرجى اختيار موظف للتحويل إليه', 'error');
+            return;
+        }
+
+        if (!currentCustomerId) {
+            khalifaPharmacy.showToast('لا توجد محادثة مختارة', 'error');
+            return;
+        }
+
+        try {
+            const data = await khalifaPharmacy.apiRequest('/api/transfer-ticket/', 'POST', {
+                customer_id: currentCustomerId,
+                to_agent_id: toAgentId,
+                note: note
+            });
+
+            if (data.success) {
+                khalifaPharmacy.showToast(`تم تحويل المحادثة بنجاح إلى ${data.to_agent}`, 'success');
+                
+                // Hide modal
+                const transferModal = bootstrap.Modal.getInstance(document.getElementById('transferModal'));
+                transferModal.hide();
+                
+                // Clear form
+                document.getElementById('transferToAgent').value = '';
+                document.getElementById('transferNote').value = '';
+                
+                // Refresh conversations list silently
+                try {
+                    refreshConversationsList();
+                } catch (refreshError) {
+                    console.log('Refresh conversations failed silently:', refreshError);
+                    // Don't show error to user, just refresh the page as fallback
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+                
+                // Clear current conversation
+                currentCustomerId = null;
+                currentTicketId = null;
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('chatHeader').classList.add('d-none');
+                document.getElementById('messagesContainer').classList.add('d-none');
+                document.getElementById('messageInputContainer').classList.add('d-none');
+                
+            } else {
+                khalifaPharmacy.showToast(data.error || 'حدث خطأ في التحويل', 'error');
+            }
+
+        } catch (error) {
+            console.error('Transfer Error:', error);
+            
+            // Hide modal anyway
+            try {
+                const transferModal = bootstrap.Modal.getInstance(document.getElementById('transferModal'));
+                if (transferModal) transferModal.hide();
+            } catch (e) {}
+            
+            // Clear form
+            document.getElementById('transferToAgent').value = '';
+            document.getElementById('transferNote').value = '';
+            
+            // Clear current conversation
+            currentCustomerId = null;
+            currentTicketId = null;
+            document.getElementById('emptyState').style.display = 'flex';
+            document.getElementById('chatHeader').classList.add('d-none');
+            document.getElementById('messagesContainer').classList.add('d-none');
+            document.getElementById('messageInputContainer').classList.add('d-none');
+            
+            // Refresh conversations list
+            setTimeout(() => {
+                refreshConversationsList();
+            }, 500);
+        }
+    }
+
+    // Close ticket
+    async function closeTicket() {
+        if (!currentTicketId) return;
+
+        if (!confirm('هل أنت متأكد من إغلاق هذه التذكرة؟')) return;
+
+        try {
+            const response = await fetch(`/api/tickets/${currentTicketId}/close/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            if (response.ok) {
+                khalifaPharmacy.showToast('تم إغلاق التذكرة بنجاح', 'success');
+                
+                // مسح المحادثة الحالية
+                currentCustomerId = null;
+                currentTicketId = null;
+                
+                // إخفاء منطقة الدردشة
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('chatHeader').classList.add('d-none');
+                document.getElementById('messagesContainer').classList.add('d-none');
+                document.getElementById('messageInputContainer').classList.add('d-none');
+                
+                // تحديث قائمة المحادثات
+                refreshConversationsList();
+            } else {
+                throw new Error('Failed to close ticket');
+            }
+
+        } catch (error) {
+            console.error('Error closing ticket:', error);
+            khalifaPharmacy.showToast('حدث خطأ أثناء إغلاق التذكرة', 'error');
+        }
+    }
+
+    // Open templates modal
+    async function openTemplatesModal() {
+        const modalEl = document.getElementById('templatesModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        try {
+            const response = await fetch('/api/global-templates/');
+            const data = await response.json();
+            const templates = data.results || data;
+
+            const container = document.getElementById('templatesList');
+            container.innerHTML = '';
+            const controls = document.createElement('div');
+            controls.className = 'd-flex align-items-center gap-2 mb-2';
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'btn btn-sm btn-primary';
+            expandBtn.textContent = 'عرض الكل';
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'btn btn-sm btn-secondary';
+            collapseBtn.textContent = 'إخفاء الكل';
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'form-control form-control-sm ms-auto';
+            searchInput.placeholder = 'بحث في القوالب...';
+            controls.appendChild(expandBtn);
+            controls.appendChild(collapseBtn);
+            controls.appendChild(searchInput);
+            container.appendChild(controls);
+            const categorize = (name, body) => {
+                const s = `${name} ${body}`;
+                const has = k => s.indexOf(k) !== -1;
+                if (has('مساء الخير') || has('صباح الخير') || has('وعليكم السلام') || has('شكرا') || has('تحية') || has('السلام')) return 'رد التحية';
+                if (has('دفع') || has('فودافون') || has('كاش') || has('انستاباي') || has('الاجمالي') || has('فاتوره')) return 'الدفع';
+                if (has('عرض') || has('غير متاح عرض')) return 'عروض';
+                if (has('استشارة') || has('استشارات') || has('فتح استشارة') || has('استكمال استشارة') || has('تحويل استشارات')) return 'استشارات';
+                if (has('خدمة') || has('التمريض') || has('مندوب') || has('التوصيل') || has('جاري التحضير') || has('تم تنفيذ الاوردر') || has('نواقص') || has('مثيل') || has('بديل') || has('ضغط الاوردرات') || has('انتظار') || has('التواصل مع المندوب') || has('ارسال الاصناف') || has('صور منتجات') || has('تحويل ماسنجر') || has('مرتجع') || has('عطل فني') || has('عناوين الفروع')) return 'خدمات';
+                return 'أخرى';
+            };
+            const groups = {};
+            const order = ['رد التحية','الدفع','عروض','خدمات','استشارات','أخرى'];
+            templates.forEach(t => {
+                const cat = (t.category || '').trim();
+                const g = order.includes(cat) ? cat : categorize(t.name || '', t.content || '');
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(t);
+            });
+
+            if (!templates || templates.length === 0) {
+                container.innerHTML = '<p class="text-muted">لا توجد قوالب متاحة</p>';
+                return;
+            }
+
+            
+
+            const renderGroup = (groupTitle, items, color) => {
+                if (!items || items.length === 0) return;
+                const header = document.createElement('div');
+                header.className = 'p-2 border d-flex justify-content-between align-items-center templates-group-header';
+                header.style.background = color;
+                const cnt = items.length;
+                header.innerHTML = `<strong>${groupTitle}</strong><span class="badge bg-dark">${cnt}</span>`;
+                container.appendChild(header);
+                const body = document.createElement('div');
+                body.className = 'templates-group-body';
+                body.style.padding = '6px';
+                body.style.background = '#fff';
+                body.style.border = '1px solid #eee';
+                body.style.borderTop = 'none';
+                body.style.display = 'none';
+                body.style.display = 'grid';
+                body.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+                body.style.gap = '8px';
+                container.appendChild(body);
+                header.onclick = () => {
+                    // collapse all other groups
+                    document.querySelectorAll('#templatesList .templates-group-body').forEach(el => {
+                        if (el !== body) el.style.display = 'none';
+                    });
+                    // toggle this one
+                    const isHidden = body.style.display === 'none';
+                    body.style.display = isHidden ? 'grid' : 'none';
+                };
+                items.forEach(template => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 border rounded cursor-pointer';
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'fw-bold mb-1';
+                    titleEl.textContent = template.title || template.name;
+                    const contentEl = document.createElement('div');
+                    contentEl.className = 'text-muted small';
+                    contentEl.textContent = template.content;
+                    contentEl.style.display = 'none';
+                    const metaEl = document.createElement('div');
+                    metaEl.className = 'text-success small';
+                    metaEl.innerHTML = '<i class="fas fa-globe"></i> قالب عام';
+                    div.appendChild(titleEl);
+                    div.appendChild(contentEl);
+                    div.appendChild(metaEl);
+                    div.onclick = () => {
+                        let content = template.content || '';
+                        if (currentAgentName) {
+                            content = content.replace(/\{\s*name\s*\}|\[\[\s*name\s*\]\]/gi, currentAgentName);
+                        }
+                        const textarea = document.getElementById('messageText');
+                        textarea.value = content;
+                        modal.hide();
+                        setTimeout(() => {
+                            textarea.focus();
+                            const len = textarea.value.length;
+                            try { textarea.setSelectionRange(len, len); } catch (e) {}
+                            const inputEvent = new Event('input');
+                            textarea.dispatchEvent(inputEvent);
+                        }, 150);
+                    };
+                    body.appendChild(div);
+                });
+                // per-group handlers moved to global after rendering
+            };
+
+            renderGroup('رد التحية', (groups['رد التحية']||[]), 'linear-gradient(135deg,#e3f2fd,#bbdefb)');
+            renderGroup('الدفع', (groups['الدفع']||[]), 'linear-gradient(135deg,#fff3e0,#ffe0b2)');
+            renderGroup('عروض', (groups['عروض']||[]), 'linear-gradient(135deg,#f1f8e9,#dcedc8)');
+            renderGroup('خدمات', (groups['خدمات']||[]), 'linear-gradient(135deg,#fce4ec,#f8bbd0)');
+            renderGroup('استشارات', (groups['استشارات']||[]), 'linear-gradient(135deg,#ede7f6,#d1c4e9)');
+            renderGroup('أخرى', (groups['أخرى']||[]), 'linear-gradient(135deg,#f5f5f5,#eeeeee)');
+
+            // Global controls
+            expandBtn.onclick = () => {
+                document.querySelectorAll('#templatesList .templates-group-body').forEach(el => {
+                    el.style.display = 'grid';
+                });
+            };
+            collapseBtn.onclick = () => {
+                document.querySelectorAll('#templatesList .templates-group-body').forEach(el => {
+                    el.style.display = 'none';
+                });
+            };
+            searchInput.addEventListener('input', () => {
+                const q = searchInput.value.trim();
+                document.querySelectorAll('#templatesList .templates-group-body > div').forEach(card => {
+                    const matches = card.textContent.indexOf(q) !== -1;
+                    card.style.display = matches ? '' : 'none';
+                });
+            });
+
+        } catch (error) {
+            console.error('Error loading templates:', error);
+        }
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'الآن';
+        if (diffMins < 60) return `${diffMins}د`;
+        if (diffHours < 24) return `${diffHours}س`;
+        if (diffDays < 7) return `${diffDays} يوم`;
+        
+        return date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+    }
+    
+    // Update all relative times every minute
+    setInterval(() => {
+        document.querySelectorAll('.message-time').forEach(timeEl => {
+            const timestamp = timeEl.getAttribute('data-timestamp');
+            if (timestamp) {
+                timeEl.textContent = formatTime(timestamp);
+            }
+        });
+    }, 60000);
+
+    // Auto-resize textarea
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('messageText');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+        }
+    });
+
+    // ============================================================================
+    // BREAK MANAGEMENT
+    // ============================================================================
+
+    // Check agent break status on page load
+    function checkBreakStatus() {
+        fetch('/api/agents/me/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch agent data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Agent break status:', data.is_on_break);
+            console.log('Agent status:', data.status);
+            updateBreakUI(data.is_on_break);
+        })
+        .catch(error => {
+            console.error('Error checking break status:', error);
+            // Don't show error notification for background status check
+        });
+    }
+
+    // Update break UI based on status
+    function updateBreakUI(isOnBreak) {
+        console.log('updateBreakUI called with isOnBreak:', isOnBreak);
+
+        const takeBreakBtn = document.getElementById('takeBreakBtn');
+        const endBreakBtn = document.getElementById('endBreakBtn');
+        const breakStatusAlert = document.getElementById('breakStatusAlert');
+
+        // Check if elements exist before accessing their properties
+        if (!takeBreakBtn || !endBreakBtn || !breakStatusAlert) {
+            console.warn('Break UI elements not found');
+            return;
+        }
+
+        if (isOnBreak) {
+            // Agent is on break
+            console.log('Setting UI to: ON BREAK');
+            takeBreakBtn.style.display = 'none';
+            endBreakBtn.style.display = 'block';
+            breakStatusAlert.style.display = 'block';
+        } else {
+            // Agent is working
+            console.log('Setting UI to: WORKING');
+            takeBreakBtn.style.display = 'block';
+            endBreakBtn.style.display = 'none';
+            breakStatusAlert.style.display = 'none';
+        }
+    }
+
+    // Take break
+    function takeBreak() {
+        if (!confirm('هل تريد أخذ استراحة؟ لن تستقبل تذاكر جديدة حتى تعود.')) {
+            return;
+        }
+
+        fetch('/api/agents/{{ request.user.agent.id }}/take_break/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            // Check if response is ok (status 200-299)
+            if (!response.ok) {
+                // Try to parse error response
+                return response.json().then(data => {
+                    throw new Error(data.error || 'حدث خطأ في الخادم');
+                }).catch(err => {
+                    // If JSON parsing fails, throw generic error
+                    throw new Error('حدث خطأ في الخادم (Status: ' + response.status + ')');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Take break response:', data);
+            if (data.success) {
+                try {
+                    console.log('Updating UI to show break status...');
+                    updateBreakUI(true);
+                    showNotification('success', data.message);
+                    console.log('✅ Break UI updated successfully');
+                } catch (uiError) {
+                    console.error('Error updating UI:', uiError);
+                    // Still show success message even if UI update fails
+                    showNotification('success', data.message);
+                }
+            } else {
+                console.error('Take break failed:', data.error);
+                showNotification('error', data.error || 'حدث خطأ');
+            }
+        })
+        .catch(error => {
+            console.error('Error taking break:', error);
+            // Only show error if it's not a UI error
+            if (!error.message || !error.message.includes('Cannot read properties')) {
+                showNotification('error', error.message || 'حدث خطأ في الاتصال');
+            }
+        });
+    }
+
+    // End break
+    function endBreak() {
+        console.log('Attempting to end break...');
+
+        fetch('/api/agents/{{ request.user.agent.id }}/end_break/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('End break response status:', response.status);
+
+            // Check if response is ok (status 200-299)
+            if (!response.ok) {
+                // Try to parse error response
+                return response.json().then(data => {
+                    console.error('End break error from server:', data.error);
+                    throw new Error(data.error || 'حدث خطأ في الخادم');
+                }).catch(err => {
+                    // If JSON parsing fails, throw generic error
+                    if (err.message && !err.message.includes('Status:')) {
+                        throw err; // Re-throw the parsed error
+                    }
+                    throw new Error('حدث خطأ في الخادم (Status: ' + response.status + ')');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('End break response data:', data);
+
+            if (data.success) {
+                try {
+                    console.log('Updating UI to show working status...');
+                    updateBreakUI(false);
+                    showNotification('success', data.message);
+                    console.log('✅ End break UI updated successfully');
+                    
+                    // ✅ Reload page after 1 second to show new tickets
+                    setTimeout(() => {
+                        console.log('Reloading page to show new tickets...');
+                        window.location.reload();
+                    }, 1000);
+                    
+                } catch (uiError) {
+                    console.error('Error updating UI:', uiError);
+                    // Still show success message and reload
+                    showNotification('success', data.message);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            } else {
+                console.error('End break failed:', data.error);
+                showNotification('error', data.error || 'حدث خطأ');
+            }
+        })
+        .catch(error => {
+            console.error('Error ending break:', error);
+            // Only show error if it's not a UI error
+            if (!error.message || !error.message.includes('Cannot read properties')) {
+                showNotification('error', error.message || 'حدث خطأ في الاتصال');
+            }
+        });
+    }
+
+    // Show notification
+    function showNotification(type, message) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Check break status on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkBreakStatus();
+
+        // Check break status every 30 seconds
+        setInterval(checkBreakStatus, 30000);
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (messagesPolling) {
+            clearInterval(messagesPolling);
+        }
+        // إيقاف تحديث المحادثات
+        stopConversationsRefresh();
+    });
+
+    // ============================================
+    // 🚀 All Conversations Modal Functionality
+    // ============================================
+    
+    let allConversationsData = [];
+    let currentOffset = 0;
+    let searchTimeout = null;
+    
+    function showAllConversationsModal() {
+        // Reset data
+        allConversationsData = [];
+        currentOffset = 0;
+        
+        // Reset UI
+        document.getElementById('allConversationsLoading').classList.remove('d-none');
+        document.getElementById('allConversationsList').classList.add('d-none');
+        document.getElementById('allConversationsEmpty').classList.add('d-none');
+        document.getElementById('loadMoreConversations').style.display = 'none';
+        
+        // Load agents for filter
+        loadAgentsForFilter();
+        
+        // Load conversations
+        loadAllConversations();
+    }
+    
+    async function loadAgentsForFilter() {
+        try {
+            const response = await fetch('/api/available-agents/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const agentFilter = document.getElementById('agentFilter');
+                
+                // Clear existing options except the first one
+                agentFilter.innerHTML = '<option value="">جميع الموظفين</option>';
+                
+                data.agents.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.id;
+                    option.textContent = agent.name;
+                    agentFilter.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading agents:', error);
+        }
+    }
+    
+    async function loadAllConversations(reset = true) {
+        if (reset) {
+            currentOffset = 0;
+            allConversationsData = [];
+        }
+        
+        try {
+            const searchQuery = document.getElementById('allConversationsSearch').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const agentFilter = document.getElementById('agentFilter').value;
+            
+            const params = new URLSearchParams({
+                limit: '20',
+                offset: currentOffset.toString()
+            });
+            
+            if (searchQuery) params.append('search', searchQuery);
+            if (statusFilter) params.append('status', statusFilter);
+            if (agentFilter) params.append('agent_id', agentFilter);
+            
+            const response = await fetch(`/api/all-conversations/?${params}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (reset) {
+                    allConversationsData = data.conversations;
+                } else {
+                    allConversationsData = [...allConversationsData, ...data.conversations];
+                }
+                
+                renderAllConversations();
+                
+                // Update pagination
+                currentOffset = data.pagination.offset + data.pagination.limit;
+                const hasMore = data.pagination.has_more;
+                document.getElementById('loadMoreConversations').style.display = hasMore ? 'inline-block' : 'none';
+                
+                // Update count
+                document.getElementById('conversationsCount').textContent = `${data.pagination.total} محادثة`;
+                
+                // Hide loading
+                document.getElementById('allConversationsLoading').classList.add('d-none');
+                
+                if (allConversationsData.length === 0) {
+                    document.getElementById('allConversationsEmpty').classList.remove('d-none');
+                    document.getElementById('allConversationsList').classList.add('d-none');
+                } else {
+                    document.getElementById('allConversationsEmpty').classList.add('d-none');
+                    document.getElementById('allConversationsList').classList.remove('d-none');
+                }
+                
+            } else {
+                throw new Error('فشل في تحميل المحادثات');
+            }
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+            khalifaPharmacy.showToast('فشل في تحميل المحادثات: ' + error.message, 'error');
+            document.getElementById('allConversationsLoading').classList.add('d-none');
+        }
+    }
+    
+    function renderAllConversations() {
+        const container = document.getElementById('allConversationsList');
+        container.innerHTML = '';
+        
+        allConversationsData.forEach(conv => {
+            const item = document.createElement('div');
+            item.className = `conversation-item status-${conv.status}`;
+            item.onclick = () => openConversationFromModal(conv);
+            
+            const statusClass = conv.status === 'open' ? 'status-open' : 
+                              conv.status === 'closed' ? 'status-closed' : 
+                              'status-delayed';
+            
+            const statusText = conv.status === 'open' ? 'مفتوحة' : 
+                             conv.status === 'closed' ? 'مغلقة' : 
+                             'متأخرة';
+            
+            const assignedAgent = conv.assigned_agent ? conv.assigned_agent.name : 'غير مُعيَّن';
+            
+            const lastMessageTime = conv.last_message.time ? 
+                new Date(conv.last_message.time).toLocaleString('ar-EG', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '--:--';
+            
+            item.innerHTML = `
+                <div class="conversation-avatar">
+                    ${conv.customer.avatar}
+                </div>
+                <div class="conversation-info">
+                    <div class="conversation-header">
+                        <div>
+                            <h6 class="conversation-name">${conv.customer.name}</h6>
+                            <p class="conversation-phone">${conv.customer.phone_number}</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="conversation-time">${lastMessageTime}</div>
+                        </div>
+                    </div>
+                    <div class="conversation-meta">
+                        <span class="conversation-status ${statusClass}">${statusText}</span>
+                        <span class="ticket-number">#${conv.ticket_number}</span>
+                        <span class="conversation-agent">📋 ${assignedAgent}</span>
+                        ${conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count} غير مقروءة</span>` : ''}
+                        ${conv.is_delayed ? '<i class="fas fa-exclamation-triangle text-danger" title="متأخرة"></i>' : ''}
+                    </div>
+                    ${conv.last_message.text ? `<p class="conversation-message">${conv.last_message.text}</p>` : ''}
+                </div>
+            `;
+            
+            container.appendChild(item);
+        });
+    }
+    
+    function openConversationFromModal(conversation) {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('allConversationsModal'));
+        
+        // Store search information for highlighting
+        window.currentSearchHighlight = {
+            query: conversation.search_matches.query,
+            inMessages: conversation.search_matches.in_messages,
+            matchingMessages: conversation.search_matches.matching_messages || []
+        };
+        
+        // Load the conversation
+        if ((conversation.status === 'open' && conversation.assigned_agent && 
+            conversation.assigned_agent.username === '{{ request.user.username }}') ||
+            conversation.status === 'closed') {
+            // Close modal first, then load conversation after modal is fully hidden
+            modal.hide();
+            
+            // Wait for modal to be fully hidden before loading conversation
+            const modalElement = document.getElementById('allConversationsModal');
+            modalElement.addEventListener('hidden.bs.modal', function onModalHidden() {
+                // Remove listener to prevent multiple calls
+                modalElement.removeEventListener('hidden.bs.modal', onModalHidden);
+                
+                // Load conversation after modal is fully closed
+                setTimeout(() => {
+                    loadCustomerConversation(conversation.customer.id, null);
+                }, 100);
+            }, { once: true });
+        } else {
+            // Show info about why it can't be opened (only for open conversations assigned to other agents)
+            modal.hide();
+            khalifaPharmacy.showToast(
+                'هذه المحادثة مُعيَّنة لموظف آخر. يمكنك فقط عرض المحادثات المفتوحة المُعيَّنة لك والمحادثات المغلقة.', 
+                'warning'
+            );
+            // Clear search highlight since we're not opening the conversation
+            window.currentSearchHighlight = null;
+        }
+    }
+    
+    // Search functionality
+    document.getElementById('allConversationsSearch').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadAllConversations(true);
+        }, 500);
+    });
+    
+    // Filter functionality
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        loadAllConversations(true);
+    });
+    
+    document.getElementById('agentFilter').addEventListener('change', function() {
+        loadAllConversations(true);
+    });
+    
+    // Load more functionality
+    document.getElementById('loadMoreConversations').addEventListener('click', function() {
+        loadAllConversations(false);
+    });
+    
+    // Modal event listeners
+    document.getElementById('allConversationsModal').addEventListener('show.bs.modal', function() {
+        showAllConversationsModal();
+    });
+    
+    // ✅ Set agent online when page loads
+    async function setAgentOnline() {
+        try {
+            await fetch('/api/agents/me/set_online/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ is_online: true })
+            });
+            console.log('✅ Agent set to online');
+        } catch (error) {
+            console.error('Error setting agent online:', error);
+        }
+    }
+    
+    // ✅ Set agent offline when page unloads
+    async function setAgentOffline() {
+        try {
+            await fetch('/api/agents/me/set_online/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ is_online: false }),
+                keepalive: true // Important for page unload
+            });
+            console.log('✅ Agent set to offline');
+        } catch (error) {
+            console.error('Error setting agent offline:', error);
+        }
+    }
+    
+    // ✅ Heartbeat to keep agent online
+    let heartbeatInterval = null;
+    function startHeartbeat() {
+        heartbeatInterval = setInterval(() => {
+            setAgentOnline();
+        }, 30000); // Every 30 seconds
+    }
+    
+    function stopHeartbeat() {
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
+    }
+    
+    // ✅ بدء التحديث التلقائي عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        startConversationsRefresh();
+        
+        // Set agent online
+        setAgentOnline();
+        startHeartbeat();
+    });
+    
+    // ✅ Set agent offline when page closes
+    window.addEventListener('beforeunload', function() {
+        stopHeartbeat();
+        setAgentOffline();
+    });
+    
+    // ✅ Handle page visibility (tab switching)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Tab is hidden - keep online but stop heartbeat
+            stopHeartbeat();
+        } else {
+            // Tab is visible - resume heartbeat
+            setAgentOnline();
+            startHeartbeat();
+        }
+    });
+</script>
+{% endblock %}

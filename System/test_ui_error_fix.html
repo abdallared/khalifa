@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إصلاح خطأ UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            direction: rtl;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #console-output {
+            background: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 اختبار إصلاح خطأ "Cannot read properties of null"</h1>
+
+    <div class="test-section">
+        <h2>الاختبار 1: العناصر موجودة</h2>
+        <div id="breakButtonsContainer">
+            <button id="takeBreakBtn" onclick="testTakeBreak()">أخذ استراحة</button>
+            <button id="endBreakBtn" onclick="testEndBreak()">العودة للعمل</button>
+        </div>
+        <div id="breakStatusAlert" style="display: none;">
+            أنت في استراحة
+        </div>
+        <p id="test1-result"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>الاختبار 2: العناصر غير موجودة (محاكاة الخطأ)</h2>
+        <button onclick="testMissingElements()">اختبار العناصر المفقودة</button>
+        <p id="test2-result"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>الاختبار 3: استدعاء updateBreakUI مباشرة</h2>
+        <button onclick="testUpdateBreakUI(true)">تفعيل الاستراحة</button>
+        <button onclick="testUpdateBreakUI(false)">إلغاء الاستراحة</button>
+        <p id="test3-result"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output:</h2>
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // Override console methods to display in page
+        const consoleOutput = document.getElementById('console-output');
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+
+        function addToConsole(type, message) {
+            const timestamp = new Date().toLocaleTimeString('ar-EG');
+            const color = type === 'error' ? 'red' : type === 'warn' ? 'orange' : 'black';
+            consoleOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${type.toUpperCase()}: ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            addToConsole('log', args.join(' '));
+            originalConsoleLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            addToConsole('error', args.join(' '));
+            originalConsoleError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+            addToConsole('warn', args.join(' '));
+            originalConsoleWarn.apply(console, args);
+        };
+
+        // ============================================================================
+        // FIXED VERSION OF updateBreakUI (with null checks)
+        // ============================================================================
+        function updateBreakUI(isOnBreak) {
+            const takeBreakBtn = document.getElementById('takeBreakBtn');
+            const endBreakBtn = document.getElementById('endBreakBtn');
+            const breakStatusAlert = document.getElementById('breakStatusAlert');
+
+            // ✅ Check if elements exist before accessing their properties
+            if (!takeBreakBtn || !endBreakBtn || !breakStatusAlert) {
+                console.warn('Break UI elements not found');
+                return;
+            }
+
+            if (isOnBreak) {
+                // Agent is on break
+                takeBreakBtn.style.display = 'none';
+                endBreakBtn.style.display = 'block';
+                breakStatusAlert.style.display = 'block';
+                console.log('UI updated: Agent is on break');
+            } else {
+                // Agent is working
+                takeBreakBtn.style.display = 'block';
+                endBreakBtn.style.display = 'none';
+                breakStatusAlert.style.display = 'none';
+                console.log('UI updated: Agent is working');
+            }
+        }
+
+        // ============================================================================
+        // TEST FUNCTIONS
+        // ============================================================================
+
+        function testTakeBreak() {
+            console.log('Testing take break...');
+            try {
+                updateBreakUI(true);
+                document.getElementById('test1-result').innerHTML = 
+                    '<span class="success">✅ نجح! تم تحديث الواجهة بدون أخطاء</span>';
+            } catch (error) {
+                console.error('Error in testTakeBreak:', error);
+                document.getElementById('test1-result').innerHTML = 
+                    '<span class="error">❌ فشل! ' + error.message + '</span>';
+            }
+        }
+
+        function testEndBreak() {
+            console.log('Testing end break...');
+            try {
+                updateBreakUI(false);
+                document.getElementById('test1-result').innerHTML = 
+                    '<span class="success">✅ نجح! تم تحديث الواجهة بدون أخطاء</span>';
+            } catch (error) {
+                console.error('Error in testEndBreak:', error);
+                document.getElementById('test1-result').innerHTML = 
+                    '<span class="error">❌ فشل! ' + error.message + '</span>';
+            }
+        }
+
+        function testMissingElements() {
+            console.log('Testing with missing elements...');
+            
+            // Temporarily hide elements
+            const container = document.getElementById('breakButtonsContainer');
+            const alert = document.getElementById('breakStatusAlert');
+            const originalContainerHTML = container.innerHTML;
+            const originalAlertHTML = alert.innerHTML;
+            
+            // Remove elements
+            container.innerHTML = '';
+            alert.remove();
+            
+            try {
+                updateBreakUI(true);
+                document.getElementById('test2-result').innerHTML = 
+                    '<span class="success">✅ نجح! لم يحدث خطأ حتى مع عدم وجود العناصر</span>';
+            } catch (error) {
+                console.error('Error in testMissingElements:', error);
+                document.getElementById('test2-result').innerHTML = 
+                    '<span class="error">❌ فشل! ' + error.message + '</span>';
+            }
+            
+            // Restore elements
+            container.innerHTML = originalContainerHTML;
+            const newAlert = document.createElement('div');
+            newAlert.id = 'breakStatusAlert';
+            newAlert.style.display = 'none';
+            newAlert.innerHTML = originalAlertHTML;
+            container.parentElement.appendChild(newAlert);
+        }
+
+        function testUpdateBreakUI(isOnBreak) {
+            console.log('Testing updateBreakUI with isOnBreak=' + isOnBreak);
+            try {
+                updateBreakUI(isOnBreak);
+                document.getElementById('test3-result').innerHTML = 
+                    '<span class="success">✅ نجح! تم تحديث الواجهة إلى: ' + 
+                    (isOnBreak ? 'في استراحة' : 'يعمل') + '</span>';
+            } catch (error) {
+                console.error('Error in testUpdateBreakUI:', error);
+                document.getElementById('test3-result').innerHTML = 
+                    '<span class="error">❌ فشل! ' + error.message + '</span>';
+            }
+        }
+
+        // Run initial test on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, running initial tests...');
+            console.log('Elements found:');
+            console.log('- takeBreakBtn: ' + (document.getElementById('takeBreakBtn') ? 'YES' : 'NO'));
+            console.log('- endBreakBtn: ' + (document.getElementById('endBreakBtn') ? 'YES' : 'NO'));
+            console.log('- breakStatusAlert: ' + (document.getElementById('breakStatusAlert') ? 'YES' : 'NO'));
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,19 @@
+{
+  "watch": [
+    "server.js",
+    ".env"
+  ],
+  "ignore": [
+    "tokens/**",
+    "node_modules/**",
+    "*.log",
+    ".git/**"
+  ],
+  "ext": "js,json",
+  "verbose": false,
+  "restartable": "rs",
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
+

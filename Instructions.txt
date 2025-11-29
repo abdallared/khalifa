@@ -1,0 +1,8 @@
+1- build a new button in http://127.0.0.1:8000/admin/tickets/ that can close all open tickets 
+
+2- in the same page the row "الموظف" typed the login name, i need the name of the employee not username to know him , the same in http://127.0.0.1:8000/admin/agents/ , i need to change the username of the agent under "الموظف" to be the agent's real name 
+
+3- at the agent's side, i need when the agent type anything to the customer typed his name beside the sending time of his answer on him, so if the same customer opened new ticket or the admin inspect chatting history he can know who said this words , second thing i need beside the customer only the number of messages so remove the word "تذاكر" beside the customer's name because all this conversation is one ticket
+
+4- the record of التذاكر المتأخرة in the dashboard dosn't work on the delayed tickets and when the admin go to http://127.0.0.1:8000/admin/tickets/
+ can show all delayed tickets and who has this ticket in his conversation area and able to open this tichet by conversation window as agent "that can happen in rush hours" so can the admin be an agent to resolve a problem or answer a customer

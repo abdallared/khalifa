@@ -1,0 +1,758 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "نظام إدارة المحادثات"
+msgstr "Conversation Management System"
+
+msgid "صيدليات خليفة"
+msgstr "Khalifa Pharmacy"
+
+msgid "لوحة التحكم"
+msgstr "Dashboard"
+
+msgid "إدارة الموظفين"
+msgstr "Manage Accounts"
+
+msgid "إدارة العملاء"
+msgstr "Manage Customers"
+
+msgid "جميع التذاكر"
+msgstr "All Tickets"
+
+msgid "القوالب العامة"
+msgstr "Global Templates"
+
+msgid "التقارير"
+msgstr "Reports"
+
+msgid "الإعدادات"
+msgstr "Settings"
+
+msgid "محادثاتي"
+msgstr "My Conversations"
+
+msgid "الملف الشخصي"
+msgstr "Profile"
+
+msgid "تسجيل الخروج"
+msgstr "Logout"
+
+msgid "متصل"
+msgstr "Connected"
+
+msgid "غير متصل"
+msgstr "Disconnected"
+
+msgid "مدير"
+msgstr "Admin"
+
+msgid "موظف"
+msgstr "Agent"
+
+msgid "إجمالي الموظفين"
+msgstr "Total Agents"
+
+msgid "إجمالي العملاء"
+msgstr "Total Customers"
+
+msgid "إجمالي التذاكر"
+msgstr "Total Tickets"
+
+msgid "التذاكر المتأخرة"
+msgstr "Delayed Tickets"
+
+msgid "تذاكر مفتوحة"
+msgstr "Open Tickets"
+
+msgid "تذاكر معلقة"
+msgstr "Pending Tickets"
+
+msgid "تذاكر مغلقة"
+msgstr "Closed Tickets"
+
+msgid "آخر التذاكر"
+msgstr "Recent Tickets"
+
+msgid "عرض الكل"
+msgstr "View All"
+
+msgid "رقم التذكرة"
+msgstr "Ticket Number"
+
+msgid "العميل"
+msgstr "Customer"
+
+msgid "الموظف المعين"
+msgstr "Assigned Agent"
+
+msgid "الحالة"
+msgstr "Status"
+
+msgid "الأولوية"
+msgstr "Priority"
+
+msgid "تاريخ الإنشاء"
+msgstr "Created Date"
+
+msgid "الإجراءات"
+msgstr "Actions"
+
+msgid "غير معين"
+msgstr "Unassigned"
+
+msgid "مفتوحة"
+msgstr "Open"
+
+msgid "معلقة"
+msgstr "Pending"
+
+msgid "مغلقة"
+msgstr "Closed"
+
+msgid "متأخرة"
+msgstr "Delayed"
+
+msgid "عالية"
+msgstr "High"
+
+msgid "عادية"
+msgstr "Normal"
+
+msgid "منخفضة"
+msgstr "Low"
+
+msgid "عرض التفاصيل"
+msgstr "View Details"
+
+msgid "لا توجد تذاكر حالياً"
+msgstr "No tickets available"
+
+msgid "قائمة الموظفين"
+msgstr "Accounts List"
+
+msgid "إضافة موظف جديد"
+msgstr "Add New Account"
+
+msgid "البحث عن موظف (الاسم، البريد، الهاتف)..."
+msgstr "Search for account (name, email, phone)..."
+
+msgid "جميع الحالات"
+msgstr "All Statuses"
+
+msgid "نشط"
+msgstr "Active"
+
+msgid "غير نشط"
+msgstr "Inactive"
+
+msgid "متاح"
+msgstr "Available"
+
+msgid "مشغول"
+msgstr "Busy"
+
+msgid "الموظف"
+msgstr "Agent"
+
+msgid "البريد الإلكتروني"
+msgstr "Email"
+
+msgid "الهاتف"
+msgstr "Phone"
+
+msgid "السعة"
+msgstr "Capacity"
+
+msgid "التذاكر الحالية"
+msgstr "Current Tickets"
+
+msgid "مراقبة المحادثة"
+msgstr "Monitor Conversation"
+
+msgid "مراقبة"
+msgstr "Monitor"
+
+msgid "تفاصيل"
+msgstr "Details"
+
+msgid "تعديل"
+msgstr "Edit"
+
+msgid "إعادة تعيين كلمة المرور"
+msgstr "Reset Password"
+
+msgid "كلمة المرور"
+msgstr "Password"
+
+msgid "لا يوجد موظفون حالياً"
+msgstr "No agents available"
+
+msgid "اسم المستخدم"
+msgstr "Username"
+
+msgid "الاسم الأول"
+msgstr "First Name"
+
+msgid "الاسم الأخير"
+msgstr "Last Name"
+
+msgid "رقم الهاتف"
+msgstr "Phone Number"
+
+msgid "السعة القصوى"
+msgstr "Maximum Capacity"
+
+msgid "إلغاء"
+msgstr "Cancel"
+
+msgid "حفظ"
+msgstr "Save"
+
+msgid "اسم الموظف"
+msgstr "Agent Name"
+
+msgid "كلمة المرور الجديدة"
+msgstr "New Password"
+
+msgid "أدخل كلمة المرور الجديدة"
+msgstr "Enter new password"
+
+msgid "يجب أن تكون كلمة المرور على الأقل 6 أحرف"
+msgstr "Password must be at least 6 characters"
+
+msgid "تأكيد كلمة المرور"
+msgstr "Confirm Password"
+
+msgid "أعد إدخال كلمة المرور"
+msgstr "Re-enter password"
+
+msgid "تغيير كلمة المرور"
+msgstr "Change Password"
+
+msgid "البريد"
+msgstr "Email"
+
+msgid "تاريخ الانضمام"
+msgstr "Join Date"
+
+msgid "تعديل الملف الشخصي"
+msgstr "Edit Profile"
+
+msgid "تغيير كلمة المرور"
+msgstr "Change Password"
+
+msgid "كلمة المرور الحالية"
+msgstr "Current Password"
+
+msgid "حفظ التغييرات"
+msgstr "Save Changes"
+
+msgid "تسجيل الدخول"
+msgstr "Login"
+
+msgid "نظام إدارة محادثات WhatsApp"
+msgstr "WhatsApp Conversation Management System"
+
+msgid "أدخل اسم المستخدم"
+msgstr "Enter username"
+
+msgid "أدخل كلمة المرور"
+msgstr "Enter password"
+
+msgid "تذكرني"
+msgstr "Remember me"
+
+msgid "نظام آمن ومشفر"
+msgstr "Secure and Encrypted System"
+
+msgid "صيدليات خليفة - المنصورة، مصر"
+msgstr "Khalifa Pharmacy - Mansoura, Egypt"
+
+# Customers Page
+msgid "إدارة العملاء"
+msgstr "Customer Management"
+
+msgid "قائمة العملاء"
+msgstr "Customer List"
+
+msgid "تصدير إلى Excel"
+msgstr "Export to Excel"
+
+msgid "تصدير Excel"
+msgstr "Export Excel"
+
+msgid "إجمالي العملاء"
+msgstr "Total Customers"
+
+msgid "تصفية حسب الفترة الزمنية"
+msgstr "Filter by Time Period"
+
+msgid "من تاريخ"
+msgstr "From Date"
+
+msgid "إلى تاريخ"
+msgstr "To Date"
+
+msgid "تطبيق الفلتر"
+msgstr "Apply Filter"
+
+msgid "إلغاء الفلتر"
+msgstr "Cancel Filter"
+
+msgid "البحث عن عميل (الاسم، الهاتف، البريد)..."
+msgstr "Search for customer (name, phone, email)..."
+
+msgid "عدد النتائج"
+msgstr "Results Count"
+
+msgid "العميل"
+msgstr "Customer"
+
+msgid "رقم الهاتف"
+msgstr "Phone Number"
+
+msgid "البريد الإلكتروني"
+msgstr "Email"
+
+msgid "المصدر"
+msgstr "Source"
+
+msgid "التذاكر"
+msgstr "Tickets"
+
+msgid "تاريخ التسجيل"
+msgstr "Registration Date"
+
+msgid "الإجراءات"
+msgstr "Actions"
+
+msgid "الموقع"
+msgstr "Website"
+
+msgid "تعديل الاسم"
+msgstr "Edit Name"
+
+msgid "عرض التفاصيل"
+msgstr "View Details"
+
+msgid "سجل المحادثات"
+msgstr "Conversation History"
+
+msgid "لا يوجد عملاء حالياً"
+msgstr "No customers currently"
+
+# Tickets Page
+msgid "جميع التذاكر"
+msgstr "All Tickets"
+
+msgid "إغلاق جميع التذاكر المفتوحة"
+msgstr "Close All Open Tickets"
+
+msgid "شكوى"
+msgstr "Complaint"
+
+msgid "ادوية"
+msgstr "Medicines"
+
+msgid "متابعة"
+msgstr "Follow-up"
+
+msgid "البحث في التذاكر (رقم، عميل، موظف)..."
+msgstr "Search in tickets (number, customer, agent)..."
+
+msgid "جميع الحالات"
+msgstr "All Statuses"
+
+msgid "مفتوحة"
+msgstr "Open"
+
+msgid "معلقة"
+msgstr "Pending"
+
+msgid "مغلقة"
+msgstr "Closed"
+
+msgid "جميع الأولويات"
+msgstr "All Priorities"
+
+msgid "عالية"
+msgstr "High"
+
+msgid "عادية"
+msgstr "Normal"
+
+msgid "منخفضة"
+msgstr "Low"
+
+msgid "الكل"
+msgstr "All"
+
+msgid "متأخرة فقط"
+msgstr "Delayed Only"
+
+msgid "رقم التذكرة"
+msgstr "Ticket Number"
+
+msgid "الموظف"
+msgstr "Agent"
+
+msgid "الحالة"
+msgstr "Status"
+
+msgid "الأولوية"
+msgstr "Priority"
+
+msgid "آخر رسالة"
+msgstr "Last Message"
+
+msgid "تاريخ الإنشاء"
+msgstr "Created Date"
+
+msgid "غير معين"
+msgstr "Not Assigned"
+
+msgid "متأخرة"
+msgstr "Delayed"
+
+msgid "فتح المحادثة"
+msgstr "Open Conversation"
+
+msgid "تحويل التذكرة"
+msgstr "Transfer Ticket"
+
+msgid "إغلاق التذكرة"
+msgstr "Close Ticket"
+
+msgid "لا توجد تذاكر حالياً"
+msgstr "No tickets currently"
+
+# Templates Page
+msgid "القوالب العامة"
+msgstr "Global Templates"
+
+msgid "إضافة قالب جديد"
+msgstr "Add New Template"
+
+msgid "عرض"
+msgstr "View"
+
+msgid "تعديل"
+msgstr "Edit"
+
+msgid "حذف"
+msgstr "Delete"
+
+msgid "لا توجد قوالب حالياً"
+msgstr "No templates currently"
+
+msgid "عنوان القالب"
+msgstr "Template Title"
+
+msgid "التصنيف"
+msgstr "Category"
+
+msgid "تحية"
+msgstr "Greeting"
+
+msgid "استفسار"
+msgstr "Inquiry"
+
+msgid "طلب"
+msgstr "Order"
+
+msgid "إغلاق"
+msgstr "Closing"
+
+msgid "أخرى"
+msgstr "Other"
+
+msgid "المحتوى"
+msgstr "Content"
+
+msgid "يمكنك استخدام {name} للإشارة لاسم الموظف المرسل"
+msgstr "You can use {name} to refer to the sender's name"
+
+msgid "إلغاء"
+msgstr "Cancel"
+
+msgid "حفظ"
+msgstr "Save"
+
+msgid "تعديل القالب"
+msgstr "Edit Template"
+
+msgid "حفظ التعديلات"
+msgstr "Save Changes"
+
+# Reports Page
+msgid "التقارير"
+msgstr "Reports"
+
+msgid "تقارير الأداء"
+msgstr "Performance Reports"
+
+msgid "تصفية"
+msgstr "Filter"
+
+msgid "إجمالي التذاكر"
+msgstr "Total Tickets"
+
+msgid "التذاكر المغلقة"
+msgstr "Closed Tickets"
+
+msgid "التذاكر المتأخرة"
+msgstr "Delayed Tickets"
+
+msgid "العملاء الجدد"
+msgstr "New Customers"
+
+msgid "توزيع التذاكر"
+msgstr "Ticket Distribution"
+
+msgid "أداء الموظفين"
+msgstr "Agents Performance"
+
+msgid "متوسط وقت الرد (آخر 7 أيام)"
+msgstr "Average Response Time (Last 7 Days)"
+
+msgid "التذاكر المعالجة"
+msgstr "Processed Tickets"
+
+msgid "متوسط وقت الرد (دقيقة)"
+msgstr "Average Response Time (Minutes)"
+
+msgid "الرسائل المرسلة"
+msgstr "Messages Sent"
+
+msgid "معدل الرضا"
+msgstr "Satisfaction Rate"
+
+msgid "النتيجة الإجمالية"
+msgstr "Overall Score"
+
+msgid "لا توجد بيانات لعرضها"
+msgstr "No data to display"
+
+# Settings Page
+msgid "الإعدادات"
+msgstr "Settings"
+
+msgid "إعدادات النظام"
+msgstr "System Settings"
+
+msgid "إعدادات WhatsApp"
+msgstr "WhatsApp Settings"
+
+msgid "حالة الاتصال"
+msgstr "Connection Status"
+
+msgid "جاري التحقق من الاتصال..."
+msgstr "Checking connection..."
+
+msgid "مسح رمز QR للربط"
+msgstr "Scan QR Code to Link"
+
+msgid "عرض رمز QR"
+msgstr "Show QR Code"
+
+msgid "افتح WhatsApp على هاتفك → الإعدادات → الأجهزة المرتبطة → ربط جهاز"
+msgstr "Open WhatsApp on your phone → Settings → Linked Devices → Link a Device"
+
+msgid "إعادة الاتصال"
+msgstr "Reconnect"
+
+msgid "قطع الاتصال"
+msgstr "Disconnect"
+
+msgid "خوارزمية التوزيع التلقائي"
+msgstr "Auto Assignment Algorithm"
+
+msgid "الأقل حملاً (Least Loaded)"
+msgstr "Least Loaded"
+
+msgid "دوري (Round Robin)"
+msgstr "Round Robin"
+
+msgid "عشوائي (Random)"
+msgstr "Random"
+
+msgid "عتبة التأخير (بالدقائق)"
+msgstr "Delay Threshold (Minutes)"
+
+msgid "الوقت المسموح قبل اعتبار التذكرة متأخرة"
+msgstr "Time allowed before considering ticket delayed"
+
+msgid "السعة القصوى الافتراضية للموظف"
+msgstr "Default Max Capacity per Agent"
+
+msgid "ساعات العمل"
+msgstr "Working Hours"
+
+msgid "من"
+msgstr "From"
+
+msgid "إلى"
+msgstr "To"
+
+msgid "حفظ الإعدادات"
+msgstr "Save Settings"
+
+msgid "النسخ الاحتياطي"
+msgstr "Backup"
+
+msgid "آخر نسخة احتياطية"
+msgstr "Last Backup"
+
+msgid "لم يتم إنشاء نسخة بعد"
+msgstr "No backup created yet"
+
+msgid "إنشاء نسخة احتياطية"
+msgstr "Create Backup"
+
+msgid "استعادة نسخة احتياطية"
+msgstr "Restore Backup"
+
+msgid "معلومات النظام"
+msgstr "System Information"
+
+msgid "اسم النظام"
+msgstr "System Name"
+
+msgid "نظام إدارة محادثات WhatsApp"
+msgstr "WhatsApp Conversation Management System"
+
+msgid "الشركة"
+msgstr "Company"
+
+msgid "صيدليات خليفة"
+msgstr "Khalifa Pharmacy"
+
+msgid "الإصدار"
+msgstr "Version"
+
+msgid "قاعدة البيانات"
+msgstr "Database"
+
+# Agent Conversations Page
+msgid "محادثاتي"
+msgstr "My Conversations"
+
+msgid "المحادثات"
+msgstr "Conversations"
+
+msgid "جميع المحادثات"
+msgstr "All Conversations"
+
+msgid "أخذ استراحة"
+msgstr "Take Break"
+
+msgid "العودة للعمل"
+msgstr "Back to Work"
+
+msgid "أنت في استراحة - لن تستقبل تذاكر جديدة"
+msgstr "You are on break - you will not receive new tickets"
+
+msgid "ابحث عن محادثة..."
+msgstr "Search for a conversation..."
+
+msgid "غير مقروءة"
+msgstr "Unread"
+
+msgid "WhatsApp للأعمال"
+msgstr "WhatsApp for Business"
+
+msgid "اختر محادثة من القائمة للبدء"
+msgstr "Select a conversation from the list to start"
+
+msgid "تحويل المحادثة"
+msgstr "Transfer Conversation"
+
+msgid "تحويل"
+msgstr "Transfer"
+
+msgid "اسم العميل"
+msgstr "Customer Name"
+
+msgid "القوالب"
+msgstr "Templates"
+
+msgid "إرفاق صورة"
+msgstr "Attach Image"
+
+msgid "اكتب رسالة..."
+msgstr "Type a message..."
+
+msgid "اختر قالب"
+msgstr "Select Template"
+
+msgid "جاري تحميل القوالب..."
+msgstr "Loading templates..."
+
+msgid "اختر الموظف المحول إليه:"
+msgstr "Select the agent to transfer to:"
+
+msgid "اختر موظف..."
+msgstr "Select agent..."
+
+msgid "ملاحظة التحويل (اختيارية):"
+msgstr "Transfer note (optional):"
+
+msgid "اكتب ملاحظة حول سبب التحويل..."
+msgstr "Write a note about the transfer reason..."
+
+msgid "البحث برقم الهاتف أو نص الرسالة..."
+msgstr "Search by phone number or message text..."
+
+msgid "جميع الحالات"
+msgstr "All Statuses"
+
+msgid "جميع الموظفين"
+msgstr "All Agents"
+
+msgid "محادثة"
+msgstr "Conversation"
+
+msgid "تحميل المزيد"
+msgstr "Load More"
+
+# Admin Conversation Page
+msgid "Conversation with"
+msgstr "Conversation with"
+
+msgid "Admin Mode"
+msgstr "Admin Mode"
+
+msgid "You are acting as an admin in this conversation with"
+msgstr "You are acting as an admin in this conversation with"
+
+msgid "Ticket #"
+msgstr "Ticket #"
+
+msgid "Delayed"
+msgstr "Delayed"
+
+msgid "Type a message..."
+msgstr "Type a message..."
+
+msgid "Failed to send message"
+msgstr "Failed to send message"
+
+msgid "Error sending message"
+msgstr "Error sending message"

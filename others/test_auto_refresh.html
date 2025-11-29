@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auto Refresh</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #28a745;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Test Page</h2>
+        <div class="user-info">
+            <div class="avatar">A</div>
+            <div>
+                <div style="font-weight: bold;">admin</div>
+                <div style="font-size: 12px; color: #666;">Admin</div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="padding: 20px;">
+        <h1>Auto-Refresh Test</h1>
+        <p>المؤشر يجب أن يظهر في أعلى يمين الصفحة تحت اسم اليوزر</p>
+        <p id="status">جاري التحميل...</p>
+    </div>
+
+    <script>
+        console.log('Script started');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // ✅ Auto-refresh every 60 seconds
+            let autoRefreshInterval;
+            let autoRefreshEnabled = true;
+            let countdown = 60;
+            
+            // Create auto-refresh indicator
+            const refreshIndicator = document.createElement('div');
+            refreshIndicator.id = 'autoRefreshIndicator';
+            refreshIndicator.style.cssText = `
+                position: fixed;
+                top: 60px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 15px;
+                font-size: 11px;
+                z-index: 1000;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            `;
+            refreshIndicator.innerHTML = `
+                <i class="fas fa-sync-alt" style="font-size: 10px;"></i>
+                <span id="refreshCountdown" style="font-size: 10px;">ON (60s)</span>
+                <button id="toggleAutoRefresh" style="
+                    background: rgba(255,255,255,0.3);
+                    border: none;
+                    color: white;
+                    padding: 1px 6px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 9px;
+                    font-weight: bold;
+                ">OFF</button>
+            `;
+            document.body.appendChild(refreshIndicator);
+            
+            console.log('Indicator created');
+            document.getElementById('status').textContent = '✅ المؤشر تم إنشاؤه بنجاح!';
+            
+            const countdownElement = document.getElementById('refreshCountdown');
+            const toggleButton = document.getElementById('toggleAutoRefresh');
+            
+            // Toggle auto-refresh
+            toggleButton.addEventListener('click', function() {
+                autoRefreshEnabled = !autoRefreshEnabled;
+                if (autoRefreshEnabled) {
+                    toggleButton.textContent = 'OFF';
+                    refreshIndicator.style.background = '#28a745';
+                    countdown = 60;
+                    startAutoRefresh();
+                } else {
+                    toggleButton.textContent = 'ON';
+                    refreshIndicator.style.background = '#6c757d';
+                    clearInterval(autoRefreshInterval);
+                    countdownElement.textContent = 'OFF';
+                }
+            });
+            
+            // Start auto-refresh
+            function startAutoRefresh() {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                }
+                
+                autoRefreshInterval = setInterval(function() {
+                    if (autoRefreshEnabled) {
+                        countdown--;
+                        countdownElement.textContent = `ON (${countdown}s)`;
+                        
+                        if (countdown <= 0) {
+                            // Refresh the page
+                            console.log('Refreshing page...');
+                            location.reload();
+                        }
+                    }
+                }, 1000);
+            }
+            
+            // Start on page load
+            startAutoRefresh();
+            console.log('Auto-refresh started');
+        });
+    </script>
+</body>
+</html>

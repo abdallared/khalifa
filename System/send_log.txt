@@ -1,0 +1,1 @@
+Full Result: {'success': False, 'error': '400 Client Error: Bad Request for url: https://elmujib.com/api/a414ed0c-cd3f-4b30-ad1c-f8e548248553/contact/send-message?token=xY7htGpBoLcB2Y4MVArKYXPe2T8Y5LfOzqnnVK9TwMEhMAewHY9Kibo3uIAd7Ngd', 'provider': 'elmujib_cloud'}

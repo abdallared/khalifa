@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dropdown</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            background: #f5f5f5;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .dropdown-toggle::after {
+            content: " ▼";
+            font-size: 12px;
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 250px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 8px;
+            padding: 8px 0;
+            margin-top: 4px;
+            right: 0;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            color: #333;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f1f3f5;
+        }
+        
+        .dropdown-item i {
+            margin-left: 8px;
+            width: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Add Account Dropdown</h1>
+    
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="addAccountDropdown">
+            <i class="fas fa-plus"></i> Add Account
+        </button>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Agent selected')">
+                <i class="fas fa-headset"></i> Agent
+            </a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Admin selected')">
+                <i class="fas fa-user-shield"></i> Admin
+            </a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('QA selected')">
+                <i class="fas fa-clipboard-check"></i> QA (Quality Assurance)
+            </a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Supervisor selected')">
+                <i class="fas fa-user-tie"></i> Supervisor
+            </a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Manager selected')">
+                <i class="fas fa-user-cog"></i> Manager
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownButton = document.getElementById('addAccountDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            if (dropdownButton && dropdownMenu) {
+                dropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+                
+                // Close dropdown when clicking an item
+                const items = dropdownMenu.querySelectorAll('.dropdown-item');
+                items.forEach(item => {
+                    item.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('show');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
