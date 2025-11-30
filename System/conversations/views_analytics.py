@@ -313,6 +313,10 @@ class ReportsView(views.APIView):
             data = self._get_agent_report(date_from, date_to)
         elif report_type == 'customer':
             data = self._get_customer_report(date_from, date_to)
+        elif report_type == 'user_period_summary':
+            data = self._get_user_period_summary(date_from, date_to)
+        elif report_type == 'user_ticket_summary':
+            data = self._get_user_ticket_summary(date_from, date_to)
         else:
             return Response({
                 'error': 'نوع التقرير غير صحيح'
@@ -335,6 +339,34 @@ class ReportsView(views.APIView):
             created_at__lte=end_datetime
         )
         
+        # Calculate aggregated agent performance for the period
+        agent_stats = AgentKPI.objects.filter(
+            kpi_date__gte=date_from,
+            kpi_date__lte=date_to
+        ).values(
+            'agent__user__full_name',
+            'agent__user__username'
+        ).annotate(
+            total_tickets=Sum('total_tickets'),
+            closed_tickets=Sum('closed_tickets'),
+            messages_sent=Sum('messages_sent'),
+            avg_response_time=Avg('avg_response_time_seconds'),
+            avg_satisfaction=Avg('customer_satisfaction_score'),
+            avg_score=Avg('overall_kpi_score')
+        ).order_by('-avg_score')
+        
+        agents_data = []
+        for stat in agent_stats:
+            agents_data.append({
+                'name': stat['agent__user__full_name'] or stat['agent__user__username'],
+                'total_tickets': stat['total_tickets'],
+                'closed_tickets': stat['closed_tickets'],
+                'messages_sent': stat['messages_sent'],
+                'avg_response_time': stat['avg_response_time'],
+                'satisfaction': stat['avg_satisfaction'],
+                'score': stat['avg_score']
+            })
+
         return {
             'period': {
                 'from': date_from,
@@ -353,7 +385,8 @@ class ReportsView(views.APIView):
                 'avg_handling_time': tickets.filter(
                     handling_time_seconds__isnull=False
                 ).aggregate(Avg('handling_time_seconds'))['handling_time_seconds__avg'] or 0,
-            }
+            },
+            'agents': agents_data
         }
     
     def _get_agent_report(self, date_from, date_to):
@@ -409,5 +442,81 @@ class ReportsView(views.APIView):
                 'regular': customers.filter(customer_type='regular').count(),
                 'vip': customers.filter(customer_type='vip').count(),
             }
+        }
+
+    def _get_user_period_summary(self, date_from, date_to):
+        """
+        User Period Summary: (Agent, Customer, Order)
+        """
+        from datetime import datetime, time
+        start_datetime = timezone.make_aware(datetime.combine(date_from, time.min))
+        end_datetime = timezone.make_aware(datetime.combine(date_to, time.max))
+
+        tickets = Ticket.objects.filter(
+            created_at__gte=start_datetime,
+            created_at__lte=end_datetime
+        ).select_related('assigned_agent__user', 'customer').order_by('assigned_agent__user__full_name', '-created_at')
+
+        data = []
+        for ticket in tickets:
+            agent_name = ticket.assigned_agent.user.full_name if ticket.assigned_agent else "Unassigned"
+            customer_name = ticket.customer.name if ticket.customer else "Unknown"
+            
+            data.append({
+                'agent': agent_name,
+                'customer': customer_name,
+                'order': ticket.ticket_number,
+                'created_at': ticket.created_at
+            })
+
+        return {
+            'period': {
+                'from': date_from,
+                'to': date_to,
+            },
+            'summary': data
+        }
+
+    def _get_user_ticket_summary(self, date_from, date_to):
+        """
+        User Ticket Summary: (Agent, Ticket, Total Number Delay, Avg Delay)
+        """
+        from datetime import datetime, time
+        start_datetime = timezone.make_aware(datetime.combine(date_from, time.min))
+        end_datetime = timezone.make_aware(datetime.combine(date_to, time.max))
+
+        # Get all agents who have tickets in this period
+        agents = Agent.objects.filter(
+            assigned_tickets__created_at__gte=start_datetime,
+            assigned_tickets__created_at__lte=end_datetime
+        ).distinct()
+
+        data = []
+        for agent in agents:
+            agent_tickets = Ticket.objects.filter(
+                assigned_agent=agent,
+                created_at__gte=start_datetime,
+                created_at__lte=end_datetime
+            )
+            
+            total_tickets = agent_tickets.count()
+            delayed_tickets_count = agent_tickets.filter(is_delayed=True).count()
+            
+            # Calculate average delay for delayed tickets
+            avg_delay = agent_tickets.filter(is_delayed=True).aggregate(Avg('total_delay_minutes'))['total_delay_minutes__avg'] or 0
+            
+            data.append({
+                'agent': agent.user.full_name,
+                'ticket_count': total_tickets,
+                'total_number_delay': delayed_tickets_count,
+                'avg_delay': round(avg_delay, 2)
+            })
+            
+        return {
+            'period': {
+                'from': date_from,
+                'to': date_to,
+            },
+            'summary': data
         }
 

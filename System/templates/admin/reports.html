@@ -19,29 +19,37 @@
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">{% trans "من تاريخ" %}</label>
+                <label class="form-label">{% trans "Report Type" %}</label>
+                <select class="form-select" id="reportType" onchange="toggleReportView()">
+                    <option value="visualization" selected>Visualization</option>
+                    <option value="user_period_summary">User Period Summary</option>
+                    <option value="user_ticket_summary">User Ticket Summary</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "From Date" %}</label>
                 <input type="date" class="form-control" id="dateFrom">
             </div>
             <div class="col-md-3">
-                <label class="form-label">{% trans "إلى تاريخ" %}</label>
+                <label class="form-label">{% trans "To Date" %}</label>
                 <input type="date" class="form-control" id="dateTo">
             </div>
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
-                <button class="btn btn-primary w-100" onclick="filterReports()">
-                    <i class="fas fa-filter"></i> {% trans "تصفية" %}
-                </button>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <button class="btn btn-success w-100" onclick="exportReports()">
-                    <i class="fas fa-file-excel"></i> {% trans "تصدير Excel" %}
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" onclick="filterReports()">
+                        <i class="fas fa-filter"></i> {% trans "Filter" %}
+                    </button>
+                    <button class="btn btn-success flex-grow-1" onclick="exportReports()">
+                        <i class="fas fa-file-excel"></i> {% trans "Export" %}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<div id="visualization-section">
 <!-- Statistics Cards -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
@@ -146,16 +154,8 @@
 </div>
 
 <!-- Response Time Chart -->
-<div class="card mb-4 border-0 shadow-sm">
-    <div class="card-header bg-white">
-        <h6 class="mb-0">
-            <i class="fas fa-chart-line"></i> {% trans "متوسط وقت الرد (آخر 7 أيام)" %}
-        </h6>
-    </div>
-    <div class="card-body">
-        <canvas id="responseTimeChart" height="100"></canvas>
-    </div>
-</div>
+<!-- Removed as per request -->
+
 
 <!-- Agents Performance -->
 <div class="card mb-4 border-0 shadow-sm">
@@ -242,6 +242,54 @@
     </div>
 </div>
 
+</div>
+
+<div id="user-period-summary-section" style="display: none;">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">User Period Summary</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="userPeriodSummaryTable">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Customer</th>
+                            <th>Order (Ticket)</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="user-ticket-summary-section" style="display: none;">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">User Ticket Summary</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="userTicketSummaryTable">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Ticket Count</th>
+                            <th>Total Number Delay</th>
+                            <th>Avg Delay (min)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -278,7 +326,6 @@
     // تعريف Charts كمتغيرات عامة
     window.ticketsChartObj = null;
     window.performanceChartObj = null;
-    window.responseTimeChartObj = null;
 
     // تحميل البيانات عند فتح الصفحة
     document.addEventListener('DOMContentLoaded', function() {
@@ -298,6 +345,7 @@
     async function loadReportsData() {
         const dateFromEl = document.getElementById('dateFrom');
         const dateToEl = document.getElementById('dateTo');
+        const reportTypeEl = document.getElementById('reportType');
 
         if (!dateFromEl || !dateToEl) {
             console.error('Date input elements not found');
@@ -306,12 +354,18 @@
 
         const dateFrom = dateFromEl.value || '';
         const dateTo = dateToEl.value || '';
+        const reportType = reportTypeEl ? reportTypeEl.value : 'visualization';
+
+        // Map dropdown value to API type
+        let apiType = 'daily';
+        if (reportType === 'user_period_summary') apiType = 'user_period_summary';
+        if (reportType === 'user_ticket_summary') apiType = 'user_ticket_summary';
 
         try {
-            console.log('Loading reports from', dateFrom, 'to', dateTo);
+            console.log('Loading reports from', dateFrom, 'to', dateTo, 'type:', apiType);
 
-            // تحميل التقرير اليومي
-            const response = await fetch(`/api/reports/?type=daily&date_from=${dateFrom}&date_to=${dateTo}`, {
+            // تحميل التقرير
+            const response = await fetch(`/api/reports/?type=${apiType}&date_from=${dateFrom}&date_to=${dateTo}`, {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
@@ -336,7 +390,13 @@
             console.log('Reports Data:', data);
 
             if (data) {
-                updateStatistics(data);
+                if (reportType === 'visualization') {
+                    updateStatistics(data);
+                } else if (reportType === 'user_period_summary') {
+                    updateUserPeriodSummary(data);
+                } else if (reportType === 'user_ticket_summary') {
+                    updateUserTicketSummary(data);
+                }
             } else {
                 console.warn('No data returned from API');
             }
@@ -350,6 +410,62 @@
             } else {
                 alert('حدث خطأ أثناء تحميل التقارير: ' + errorMsg);
             }
+        }
+    }
+
+    function toggleReportView() {
+        const reportType = document.getElementById('reportType').value;
+        
+        const vizSection = document.getElementById('visualization-section');
+        const periodSection = document.getElementById('user-period-summary-section');
+        const ticketSection = document.getElementById('user-ticket-summary-section');
+
+        if (vizSection) vizSection.style.display = reportType === 'visualization' ? 'block' : 'none';
+        if (periodSection) periodSection.style.display = reportType === 'user_period_summary' ? 'block' : 'none';
+        if (ticketSection) ticketSection.style.display = reportType === 'user_ticket_summary' ? 'block' : 'none';
+        
+        loadReportsData();
+    }
+
+    function updateUserPeriodSummary(data) {
+        const tbody = document.querySelector('#userPeriodSummaryTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (data.summary && data.summary.length > 0) {
+            data.summary.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.agent}</td>
+                    <td>${item.customer}</td>
+                    <td>${item.order}</td>
+                    <td>${new Date(item.created_at).toLocaleString('en-US')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+             tbody.innerHTML = '<tr><td colspan="4" class="text-center">لا توجد بيانات</td></tr>';
+        }
+    }
+
+    function updateUserTicketSummary(data) {
+        const tbody = document.querySelector('#userTicketSummaryTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (data.summary && data.summary.length > 0) {
+            data.summary.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.agent}</td>
+                    <td>${item.ticket_count}</td>
+                    <td>${item.total_number_delay}</td>
+                    <td>${item.avg_delay}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+             tbody.innerHTML = '<tr><td colspan="4" class="text-center">لا توجد بيانات</td></tr>';
         }
     }
 
@@ -429,49 +545,6 @@
                 }
             }
         });
-
-        // Response Time Line Chart
-        const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
-        window.responseTimeChartObj = new Chart(responseTimeCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'متوسط وقت الرد (دقيقة)',
-                    data: [],
-                    borderColor: 'rgba(13, 110, 253, 1)',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            font: {
-                                family: 'Cairo, sans-serif'
-                            }
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                family: 'Cairo, sans-serif'
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
     }
 
     // تحديث الإحصائيات
@@ -502,11 +575,87 @@
                 }
             }
 
+            // Update Agents Table
+            if (data.agents) {
+                updateAgentsTable(data.agents);
+            }
+
             // تحديث Performance Chart من جدول الموظفين
             updatePerformanceChart();
 
         } catch (error) {
             console.error('Error updating statistics:', error);
+        }
+    }
+
+    function updateAgentsTable(agents) {
+        const tbody = document.querySelector('#agentsTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (agents && agents.length > 0) {
+            agents.forEach(agent => {
+                const tr = document.createElement('tr');
+                
+                // Calculate satisfaction percentage
+                let satisfactionHtml = '-';
+                if (agent.satisfaction) {
+                    const sat = Math.round(agent.satisfaction);
+                    satisfactionHtml = `
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-2" style="height: 20px; min-width: 100px;">
+                                <div class="progress-bar bg-success" style="width: ${sat}%">
+                                    ${sat}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Calculate score badge
+                let scoreHtml = '-';
+                if (agent.score) {
+                    const score = parseFloat(agent.score).toFixed(1);
+                    let badgeClass = 'danger';
+                    if (score >= 80) badgeClass = 'success';
+                    else if (score >= 60) badgeClass = 'warning';
+                    
+                    scoreHtml = `<span class="badge bg-${badgeClass}">${score}%</span>`;
+                }
+
+                // Avg response time
+                let avgResponse = '-';
+                if (agent.avg_response_time) {
+                    avgResponse = Math.round(agent.avg_response_time / 60);
+                }
+
+                tr.innerHTML = `
+                    <td data-agent-name="${agent.name}">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                ${agent.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>${agent.name}</div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-primary">${agent.total_tickets || 0}</span></td>
+                    <td><span class="badge bg-success">${agent.closed_tickets || 0}</span></td>
+                    <td>${avgResponse}</td>
+                    <td><span class="badge bg-info">${agent.messages_sent || 0}</span></td>
+                    <td>${satisfactionHtml}</td>
+                    <td>${scoreHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="fas fa-chart-bar fa-3x mb-3 d-block"></i>
+                        No data to display
+                    </td>
+                </tr>
+            `;
         }
     }
 
@@ -581,6 +730,7 @@
     async function exportReports() {
         const dateFrom = document.getElementById('dateFrom').value;
         const dateTo = document.getElementById('dateTo').value;
+        const reportType = document.getElementById('reportType').value;
 
         if (!dateFrom || !dateTo) {
             khalifaPharmacy.showToast('يرجى اختيار نطاق التاريخ', 'warning');
@@ -590,8 +740,17 @@
         try {
             khalifaPharmacy.showToast('جاري تصدير التقارير...', 'info');
 
-            // جمع بيانات الجدول
-            const table = document.getElementById('agentsTable');
+            // تحديد الجدول المراد تصديره
+            let tableId = 'agentsTable';
+            if (reportType === 'user_period_summary') tableId = 'userPeriodSummaryTable';
+            if (reportType === 'user_ticket_summary') tableId = 'userTicketSummaryTable';
+
+            const table = document.getElementById(tableId);
+            if (!table) {
+                console.error('Table not found:', tableId);
+                return;
+            }
+
             let csvContent = '\uFEFF'; // BOM for UTF-8
 
             // العناوين
@@ -627,7 +786,7 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `تقرير_الأداء_${dateFrom}_${dateTo}.csv`);
+            link.setAttribute('download', `تقرير_${reportType}_${dateFrom}_${dateTo}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
