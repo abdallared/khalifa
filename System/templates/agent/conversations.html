@@ -2148,14 +2148,14 @@
             controls.className = 'd-flex align-items-center gap-2 mb-2';
             const expandBtn = document.createElement('button');
             expandBtn.className = 'btn btn-sm btn-primary';
-            expandBtn.textContent = 'عرض الكل';
+            expandBtn.textContent = 'Show All';
             const collapseBtn = document.createElement('button');
             collapseBtn.className = 'btn btn-sm btn-secondary';
-            collapseBtn.textContent = 'إخفاء الكل';
+            collapseBtn.textContent = 'Hide All';
             const searchInput = document.createElement('input');
             searchInput.type = 'text';
             searchInput.className = 'form-control form-control-sm ms-auto';
-            searchInput.placeholder = 'بحث في القوالب...';
+            searchInput.placeholder = 'Search templates...';
             controls.appendChild(expandBtn);
             controls.appendChild(collapseBtn);
             controls.appendChild(searchInput);
@@ -2163,24 +2163,33 @@
             const categorize = (name, body) => {
                 const s = `${name} ${body}`;
                 const has = k => s.indexOf(k) !== -1;
-                if (has('مساء الخير') || has('صباح الخير') || has('وعليكم السلام') || has('شكرا') || has('تحية') || has('السلام')) return 'رد التحية';
-                if (has('دفع') || has('فودافون') || has('كاش') || has('انستاباي') || has('الاجمالي') || has('فاتوره')) return 'الدفع';
-                if (has('عرض') || has('غير متاح عرض')) return 'عروض';
-                if (has('استشارة') || has('استشارات') || has('فتح استشارة') || has('استكمال استشارة') || has('تحويل استشارات')) return 'استشارات';
-                if (has('خدمة') || has('التمريض') || has('مندوب') || has('التوصيل') || has('جاري التحضير') || has('تم تنفيذ الاوردر') || has('نواقص') || has('مثيل') || has('بديل') || has('ضغط الاوردرات') || has('انتظار') || has('التواصل مع المندوب') || has('ارسال الاصناف') || has('صور منتجات') || has('تحويل ماسنجر') || has('مرتجع') || has('عطل فني') || has('عناوين الفروع')) return 'خدمات';
-                return 'أخرى';
+                if (has('مساء الخير') || has('صباح الخير') || has('وعليكم السلام') || has('شكرا') || has('تحية') || has('السلام')) return 'Greeting';
+                if (has('دفع') || has('فودافون') || has('كاش') || has('انستاباي') || has('الاجمالي') || has('فاتوره')) return 'Payment';
+                if (has('عرض') || has('غير متاح عرض')) return 'Offers';
+                if (has('استشارة') || has('استشارات') || has('فتح استشارة') || has('استكمال استشارة') || has('تحويل استشارات')) return 'Consultations';
+                if (has('خدمة') || has('التمريض') || has('مندوب') || has('التوصيل') || has('جاري التحضير') || has('تم تنفيذ الاوردر') || has('نواقص') || has('مثيل') || has('بديل') || has('ضغط الاوردرات') || has('انتظار') || has('التواصل مع المندوب') || has('ارسال الاصناف') || has('صور منتجات') || has('تحويل ماسنجر') || has('مرتجع') || has('عطل فني') || has('عناوين الفروع')) return 'Services';
+                return 'Others';
             };
             const groups = {};
-            const order = ['رد التحية','الدفع','عروض','خدمات','استشارات','أخرى'];
+            const order = ['Greeting','Payment','Offers','Services','Consultations','Others'];
+            const categoryMap = {
+                'رد التحية': 'Greeting',
+                'الدفع': 'Payment',
+                'عروض': 'Offers',
+                'خدمات': 'Services',
+                'استشارات': 'Consultations',
+                'أخرى': 'Others'
+            };
             templates.forEach(t => {
-                const cat = (t.category || '').trim();
+                let cat = (t.category || '').trim();
+                if (categoryMap[cat]) cat = categoryMap[cat];
                 const g = order.includes(cat) ? cat : categorize(t.name || '', t.content || '');
                 if (!groups[g]) groups[g] = [];
                 groups[g].push(t);
             });
 
             if (!templates || templates.length === 0) {
-                container.innerHTML = '<p class="text-muted">لا توجد قوالب متاحة</p>';
+                container.innerHTML = '<p class="text-muted">No templates available</p>';
                 return;
             }
 
@@ -2226,7 +2235,7 @@
                     contentEl.style.display = 'none';
                     const metaEl = document.createElement('div');
                     metaEl.className = 'text-success small';
-                    metaEl.innerHTML = '<i class="fas fa-globe"></i> قالب عام';
+                    metaEl.innerHTML = '<i class="fas fa-globe"></i> Global Template';
                     div.appendChild(titleEl);
                     div.appendChild(contentEl);
                     div.appendChild(metaEl);
@@ -2251,12 +2260,12 @@
                 // per-group handlers moved to global after rendering
             };
 
-            renderGroup('رد التحية', (groups['رد التحية']||[]), 'linear-gradient(135deg,#e3f2fd,#bbdefb)');
-            renderGroup('الدفع', (groups['الدفع']||[]), 'linear-gradient(135deg,#fff3e0,#ffe0b2)');
-            renderGroup('عروض', (groups['عروض']||[]), 'linear-gradient(135deg,#f1f8e9,#dcedc8)');
-            renderGroup('خدمات', (groups['خدمات']||[]), 'linear-gradient(135deg,#fce4ec,#f8bbd0)');
-            renderGroup('استشارات', (groups['استشارات']||[]), 'linear-gradient(135deg,#ede7f6,#d1c4e9)');
-            renderGroup('أخرى', (groups['أخرى']||[]), 'linear-gradient(135deg,#f5f5f5,#eeeeee)');
+            renderGroup('Greeting', (groups['Greeting']||[]), 'linear-gradient(135deg,#e3f2fd,#bbdefb)');
+            renderGroup('Payment', (groups['Payment']||[]), 'linear-gradient(135deg,#fff3e0,#ffe0b2)');
+            renderGroup('Offers', (groups['Offers']||[]), 'linear-gradient(135deg,#f1f8e9,#dcedc8)');
+            renderGroup('Services', (groups['Services']||[]), 'linear-gradient(135deg,#fce4ec,#f8bbd0)');
+            renderGroup('Consultations', (groups['Consultations']||[]), 'linear-gradient(135deg,#ede7f6,#d1c4e9)');
+            renderGroup('Others', (groups['Others']||[]), 'linear-gradient(135deg,#f5f5f5,#eeeeee)');
 
             // Global controls
             expandBtn.onclick = () => {
@@ -2297,13 +2306,13 @@
             container.innerHTML = '';
 
             if (!templates || templates.length === 0) {
-                container.innerHTML = '<div class="alert alert-info"><i class="fas fa-star text-danger"></i> لا توجد قوالب عالية الأولوية متاحة</div>';
+                container.innerHTML = '<div class="alert alert-info"><i class="fas fa-file-alt text-danger"></i> No high priority templates available</div>';
                 return;
             }
 
             const header = document.createElement('div');
             header.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
-            header.innerHTML = '<i class="fas fa-star"></i><strong>القوالب العالية الأولوية</strong>';
+            header.innerHTML = '<i class="fas fa-file-alt"></i><strong>High Priority Templates</strong>';
             container.appendChild(header);
 
             const grid = document.createElement('div');
@@ -2321,7 +2330,7 @@
 
                 const titleEl = document.createElement('div');
                 titleEl.className = 'fw-bold mb-2 d-flex align-items-center gap-2';
-                titleEl.innerHTML = `<i class="fas fa-star text-danger"></i>${template.name}`;
+                titleEl.innerHTML = `<i class="fas fa-file-alt text-danger"></i>${template.name}`;
 
                 const contentEl = document.createElement('div');
                 contentEl.className = 'text-muted small';

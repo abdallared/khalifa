@@ -681,6 +681,16 @@
             const data = await response.json();
 
             if (response.ok) {
+                // Prepare permissions HTML
+                let permissionsHtml = '';
+                if (data.perm_no_choice) permissionsHtml += '<span class="badge bg-secondary me-1">No choice</span>';
+                if (data.perm_consultation) permissionsHtml += '<span class="badge bg-info me-1">Consultation</span>';
+                if (data.perm_complaint) permissionsHtml += '<span class="badge bg-warning text-dark me-1">Complaint</span>';
+                if (data.perm_medicine) permissionsHtml += '<span class="badge bg-success me-1">Medicine</span>';
+                if (data.perm_follow_up) permissionsHtml += '<span class="badge bg-primary me-1">Follow up</span>';
+                
+                if (!permissionsHtml) permissionsHtml = '<span class="text-muted">No permissions assigned</span>';
+
                 // Display agent details in modal
                 const modalContent = `
                     <div class="modal" id="viewAgentModal" style="display: block;">
@@ -699,6 +709,7 @@
                                         <tr><th>Current Tickets:</th><td>${data.current_active_tickets}</td></tr>
                                         <tr><th>Available Capacity:</th><td>${data.available_capacity}</td></tr>
                                         <tr><th>Status:</th><td><span class="badge bg-${getStatusColor(data.status)}">${getStatusText(data.status)}</span></td></tr>
+                                        <tr><th>Permissions:</th><td>${permissionsHtml}</td></tr>
                                     </table>
                                 </div>
                                 <div class="modal-footer">
@@ -754,6 +765,44 @@
                                                 <label class="form-label">Max Capacity *</label>
                                                 <input type="number" class="form-control" name="max_capacity" value="${data.max_capacity}" min="1" required>
                                             </div>
+                                            
+                                            <!-- Agent Permissions -->
+                                            <div class="col-12">
+                                                <label class="form-label fw-bold">Agent Permissions</label>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="perm_no_choice" id="edit_perm_no_choice" ${data.perm_no_choice ? 'checked' : ''}>
+                                                            <label class="form-check-label" for="edit_perm_no_choice">No choice</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="perm_consultation" id="edit_perm_consultation" ${data.perm_consultation ? 'checked' : ''}>
+                                                            <label class="form-check-label" for="edit_perm_consultation">Consultation</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="perm_complaint" id="edit_perm_complaint" ${data.perm_complaint ? 'checked' : ''}>
+                                                            <label class="form-check-label" for="edit_perm_complaint">Complaint</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="perm_medicine" id="edit_perm_medicine" ${data.perm_medicine ? 'checked' : ''}>
+                                                            <label class="form-check-label" for="edit_perm_medicine">Medicine</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="perm_follow_up" id="edit_perm_follow_up" ${data.perm_follow_up ? 'checked' : ''}>
+                                                            <label class="form-check-label" for="edit_perm_follow_up">Follow up</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-6">
                                                 <label class="form-label">Status</label>
                                                 <select class="form-select" name="is_active">
@@ -857,7 +906,12 @@
                 },
                 body: JSON.stringify({
                     max_capacity: parseInt(max_capacity),
-                    status: formData.get('status')
+                    status: formData.get('status'),
+                    perm_no_choice: document.getElementById('edit_perm_no_choice').checked,
+                    perm_consultation: document.getElementById('edit_perm_consultation').checked,
+                    perm_complaint: document.getElementById('edit_perm_complaint').checked,
+                    perm_medicine: document.getElementById('edit_perm_medicine').checked,
+                    perm_follow_up: document.getElementById('edit_perm_follow_up').checked
                 })
             });
 
