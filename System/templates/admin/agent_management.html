@@ -7,32 +7,31 @@
 
 {% block content %}
 
-<!-- Date Range Filter -->
-<div class="card mb-4">
+<div class="card mb-3" style="background-color: white; border: 1px solid #dee2e6;">
+    <div class="card-header bg-white" style="border-bottom: 1px solid #dee2e6;">
+        <h6 class="mb-0" style="color: #2c5f2d;">
+            <i class="fas fa-calendar-alt me-2"></i> Filter by Time Period
+        </h6>
+    </div>
     <div class="card-body">
-        <form method="get">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">From Date</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">To Date</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <button type="submit" name="export" value="csv" class="btn btn-success flex-grow-1">
-                            <i class="fas fa-file-excel"></i> Export
-                        </button>
-                    </div>
-                </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label" style="color: #000;">From Date</label>
+                <input type="date" class="form-control" id="dateFrom" value="{{ date_from|date:'Y-m-d' }}">
             </div>
-        </form>
+            <div class="col-md-3">
+                <label class="form-label" style="color: #000;">To Date</label>
+                <input type="date" class="form-control" id="dateTo" value="{{ date_to|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-6 d-flex align-items-end gap-2">
+                <button class="btn flex-grow-1" style="background-color: #2c5f2d; color: white; border: none;" onclick="applyDateFilter()">
+                    <i class="fas fa-filter me-2"></i> Apply Filter
+                </button>
+                <button class="btn flex-grow-1" style="background-color: #ff6b35; color: white; border: none;" onclick="cancelDateFilter()">
+                    <i class="fas fa-times me-2"></i> Cancel Filter
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -42,6 +41,13 @@
             <h5 class="mb-0">
                 <i class="fas fa-users-cog text-primary me-2"></i> Agent Activity Monitoring
             </h5>
+            <div class="text-muted small" id="dateDisplay">
+                {% if date_from and date_to %}
+                    {{ date_from|date:"Y-m-d" }} {% if date_from != date_to %}to {{ date_to|date:"Y-m-d" }}{% endif %}
+                {% else %}
+                    {% now "Y-m-d" %}
+                {% endif %}
+            </div>
         </div>
     </div>
     <div class="card-body p-0">
@@ -313,7 +319,17 @@
             if (!updatesEnabled) return;
             
             try {
-                const response = await fetch('/api/agents/activity_list/');
+                // Get date parameters from the inputs
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+                
+                // Build URL with date parameters
+                let url = '/api/agents/activity_list/';
+                if (dateFrom && dateTo) {
+                    url += `?date_from=${dateFrom}&date_to=${dateTo}`;
+                }
+                
+                const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
                 
                 const agents = await response.json();
@@ -428,5 +444,36 @@
         // Start on page load
         startActivityUpdates();
     });
+    
+    // Apply date filter
+    function applyDateFilter() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        if (!dateFrom || !dateTo) {
+            khalifaPharmacy.showToast('Please select both dates', 'warning');
+            return;
+        }
+        
+        if (new Date(dateFrom) > new Date(dateTo)) {
+            khalifaPharmacy.showToast('From Date must be before To Date', 'warning');
+            return;
+        }
+        
+        // Reload page with date parameters
+        const url = new URL(window.location.href);
+        url.searchParams.set('date_from', dateFrom);
+        url.searchParams.set('date_to', dateTo);
+        window.location.href = url.toString();
+    }
+    
+    // Cancel date filter
+    function cancelDateFilter() {
+        // Remove date parameters from URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('date_from');
+        url.searchParams.delete('date_to');
+        window.location.href = url.toString();
+    }
 </script>
 {% endblock %}

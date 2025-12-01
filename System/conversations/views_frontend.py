@@ -418,12 +418,32 @@ def admin_agent_management(request):
     
     from .models import ActivityLog
     from django.db.models import Q
+    from datetime import datetime, time
     
     # Get date range
     date_from_str = request.GET.get('date_from')
     date_to_str = request.GET.get('date_to')
     
-    today = timezone.now().date()
+    # Get date range from query parameters
+    date_from_str = request.GET.get('date_from')
+    date_to_str = request.GET.get('date_to')
+    
+    # Parse dates or default to today
+    if date_from_str:
+        try:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_from = timezone.now().date()
+    else:
+        date_from = timezone.now().date()
+    
+    if date_to_str:
+        try:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_to = timezone.now().date()
+    else:
+        date_to = timezone.now().date()
     
     if date_from_str:
         try:
@@ -446,9 +466,10 @@ def admin_agent_management(request):
     
     agents_data = []
     for agent in agents:
-        # الحصول على النشاط في الفترة المحددة
+        # الحصول على نشاط في نطاق التاريخ المحدد باستخدام __date
         activities = ActivityLog.objects.filter(
-            created_at__date__range=[date_from, date_to]
+            created_at__date__gte=date_from,
+            created_at__date__lte=date_to
         ).filter(
             Q(user=agent.user, action__in=['login', 'logout']) |
             Q(entity_type='agent', entity_id=agent.id, action__in=['break_start', 'break_end', 'force_logout'])
@@ -481,8 +502,8 @@ def admin_agent_management(request):
                     })
                     current_break_start = None
         
-        # إذا كان في استراحة حالياً (فقط إذا كان تاريخ اليوم ضمن النطاق)
-        if agent.is_on_break and agent.break_started_at and date_to >= today:
+        # إذا كان في استراحة حالياً - بس لو الفلتر على النهارده
+        if agent.is_on_break and agent.break_started_at and date_to == timezone.now().date():
             break_start = timezone.localtime(agent.break_started_at)
             # Check if break started within the range
             if date_from <= break_start.date() <= date_to:
@@ -523,8 +544,8 @@ def admin_agent_management(request):
     
     return render(request, 'admin/agent_management.html', {
         'agents_data': agents_data,
-        'date_from': date_from.strftime('%Y-%m-%d'),
-        'date_to': date_to.strftime('%Y-%m-%d'),
+        'date_from': date_from,
+        'date_to': date_to
     })
 
 
