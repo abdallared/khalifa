@@ -9,6 +9,8 @@ Frontend Views
 """
 
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
+import csv
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -418,8 +420,9 @@ def admin_agent_management(request):
     from django.db.models import Q
     from datetime import datetime, time
     
-    # الحصول على جميع الموظفين
-    agents = Agent.objects.select_related('user').filter(user__is_active=True).order_by('user__full_name')
+    # Get date range
+    date_from_str = request.GET.get('date_from')
+    date_to_str = request.GET.get('date_to')
     
     # Get date range from query parameters
     date_from_str = request.GET.get('date_from')
@@ -441,6 +444,25 @@ def admin_agent_management(request):
             date_to = timezone.now().date()
     else:
         date_to = timezone.now().date()
+    
+    if date_from_str:
+        try:
+            date_from = timezone.datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_from = today
+    else:
+        date_from = today
+        
+    if date_to_str:
+        try:
+            date_to = timezone.datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_to = today
+    else:
+        date_to = today
+
+    # الحصول على جميع الموظفين
+    agents = Agent.objects.select_related('user').filter(user__is_active=True).order_by('user__full_name')
     
     agents_data = []
     for agent in agents:
@@ -483,13 +505,15 @@ def admin_agent_management(request):
         # إذا كان في استراحة حالياً - بس لو الفلتر على النهارده
         if agent.is_on_break and agent.break_started_at and date_to == timezone.now().date():
             break_start = timezone.localtime(agent.break_started_at)
-            duration = (timezone.now() - agent.break_started_at).total_seconds() / 60
-            breaks.append({
-                'start': break_start,
-                'end': None,
-                'duration': int(duration),
-                'is_active': True
-            })
+            # Check if break started within the range
+            if date_from <= break_start.date() <= date_to:
+                duration = (timezone.now() - agent.break_started_at).total_seconds() / 60
+                breaks.append({
+                    'start': break_start,
+                    'end': None,
+                    'duration': int(duration),
+                    'is_active': True
+                })
             
         agents_data.append({
             'agent': agent,
@@ -498,6 +522,25 @@ def admin_agent_management(request):
             'breaks': breaks,
             'total_break_minutes': sum(b['duration'] for b in breaks)
         })
+    
+    # Handle Export
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="agent_activity_{date_from}_{date_to}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Agent', 'Login Time', 'Logout Time', 'Total Break (min)', 'Status'])
+        
+        for item in agents_data:
+            writer.writerow([
+                item['agent'].user.full_name,
+                item['login_time'].strftime("%Y-%m-%d %H:%M:%S") if item['login_time'] else '-',
+                item['logout_time'].strftime("%Y-%m-%d %H:%M:%S") if item['logout_time'] else '-',
+                item['total_break_minutes'],
+                item['agent'].status if item['agent'].is_online else 'Offline'
+            ])
+            
+        return response
     
     return render(request, 'admin/agent_management.html', {
         'agents_data': agents_data,
