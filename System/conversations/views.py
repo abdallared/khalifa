@@ -465,20 +465,43 @@ class AgentViewSet(viewsets.ModelViewSet):
     def activity_list(self, request):
         """
         Get detailed activity status of all agents for supervisor monitoring
-        GET /api/agents/activity_list/
+        GET /api/agents/activity_list/?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
         """
         # Check permissions
         if request.user.role not in ['admin', 'manager', 'supervisor', 'agent_supervisor']:
              return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
 
         agents = Agent.objects.select_related('user').filter(user__is_active=True).order_by('user__full_name')
-        today = timezone.now().date()
+        
+        # Get date range from query parameters
+        from datetime import datetime
+        date_from_str = request.GET.get('date_from')
+        date_to_str = request.GET.get('date_to')
+        
+        # Parse dates or default to today
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            except ValueError:
+                date_from = timezone.now().date()
+        else:
+            date_from = timezone.now().date()
+        
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            except ValueError:
+                date_to = timezone.now().date()
+        else:
+            date_to = timezone.now().date()
+        
         data = []
 
         for agent in agents:
-            # Get today's activity
+            # Get activity for the specified date range
             activities = ActivityLog.objects.filter(
-                created_at__date=today
+                created_at__date__gte=date_from,
+                created_at__date__lte=date_to
             ).filter(
                 Q(user=agent.user, action__in=['login', 'logout']) |
                 Q(entity_type='agent', entity_id=agent.id, action__in=['break_start', 'break_end', 'force_logout'])
@@ -507,8 +530,8 @@ class AgentViewSet(viewsets.ModelViewSet):
                         })
                         current_break_start = None
             
-            # If currently on break
-            if agent.is_on_break and agent.break_started_at:
+            # If currently on break (only show if filtering today)
+            if agent.is_on_break and agent.break_started_at and date_to == timezone.now().date():
                 duration = (timezone.now() - agent.break_started_at).total_seconds() / 60
                 breaks.append({
                     'start': agent.break_started_at,
