@@ -114,7 +114,7 @@
                             {% if item.breaks %}
                                 <div class="d-flex flex-column gap-1">
                                     {% for break in item.breaks %}
-                                        <small class="{% if break.is_active %}text-primary fw-bold{% else %}text-muted{% endif %}">
+                                        <small class="break-item-{{ item.agent.id }} {% if forloop.counter > 5 %}d-none{% endif %} {% if break.is_active %}text-primary fw-bold{% else %}text-muted{% endif %}">
                                             <i class="fas fa-clock fa-xs"></i> 
                                             {{ break.start|date:"h:i A" }} 
                                             {% if break.end %}
@@ -124,8 +124,13 @@
                                             {% endif %}
                                         </small>
                                     {% endfor %}
+                                    {% if item.breaks|length > 5 %}
+                                        <button class="btn btn-link btn-sm p-0 text-primary show-more-breaks" data-agent-id="{{ item.agent.id }}" data-total="{{ item.breaks|length }}" onclick="toggleBreaks({{ item.agent.id }}, this)">
+                                            <i class="fas fa-chevron-down"></i> Show more ({{ item.breaks|length|add:"-5" }} more)
+                                        </button>
+                                    {% endif %}
                                     <div class="border-top mt-1 pt-1">
-                                        <small class="fw-bold">Total: {{ item.total_break_minutes }}m</small>
+                                        <small class="fw-bold">Total: {{ item.total_break_formatted }}</small>
                                     </div>
                                 </div>
                             {% else %}
@@ -173,6 +178,27 @@
 
 {% block extra_js %}
 <script>
+    // Toggle show/hide breaks
+    function toggleBreaks(agentId, button) {
+        const breakItems = document.querySelectorAll(`.break-item-${agentId}`);
+        const isExpanded = button.dataset.expanded === 'true';
+        
+        breakItems.forEach((item, index) => {
+            if (index >= 5) {
+                item.classList.toggle('d-none', isExpanded);
+            }
+        });
+        
+        if (isExpanded) {
+            const total = parseInt(button.dataset.total);
+            button.innerHTML = `<i class="fas fa-chevron-down"></i> Show more (${total - 5} more)`;
+            button.dataset.expanded = 'false';
+        } else {
+            button.innerHTML = `<i class="fas fa-chevron-up"></i> Show less`;
+            button.dataset.expanded = 'true';
+        }
+    }
+
     async function forceLogout(agentId, agentName) {
         if (!confirm(`Are you sure you want to force logout ${agentName}?`)) return;
         
@@ -256,6 +282,19 @@
         let activityUpdateInterval;
         let updatesEnabled = true;
         
+        // Check if filter date is today
+        const today = new Date().toISOString().split('T')[0];
+        const dateFromInput = document.querySelector('input[name="date_from"]');
+        const dateToInput = document.querySelector('input[name="date_to"]');
+        const dateFrom = dateFromInput ? dateFromInput.value : today;
+        const dateTo = dateToInput ? dateToInput.value : today;
+        
+        // Disable live updates if viewing historical data (not today)
+        const isViewingHistoricalData = (dateFrom !== today || dateTo !== today);
+        if (isViewingHistoricalData) {
+            updatesEnabled = false;
+        }
+        
         // Create status indicator
         const refreshIndicator = document.createElement('div');
         refreshIndicator.id = 'activityStatusIndicator';
@@ -263,7 +302,7 @@
             position: fixed;
             top: 60px;
             right: 20px;
-            background: #28a745;
+            background: ${isViewingHistoricalData ? '#6c757d' : '#28a745'};
             color: white;
             padding: 4px 10px;
             border-radius: 15px;
@@ -275,8 +314,8 @@
             gap: 6px;
         `;
         refreshIndicator.innerHTML = `
-            <i class="fas fa-sync-alt fa-spin" style="font-size: 10px;"></i>
-            <span id="activityStatusText" style="font-size: 10px;">Live Updates</span>
+            <i class="fas fa-sync-alt ${isViewingHistoricalData ? '' : 'fa-spin'}" style="font-size: 10px;"></i>
+            <span id="activityStatusText" style="font-size: 10px;">${isViewingHistoricalData ? 'Historical Data' : 'Live Updates'}</span>
             <button id="toggleActivityUpdates" style="
                 background: rgba(255,255,255,0.3);
                 border: none;
@@ -286,7 +325,7 @@
                 cursor: pointer;
                 font-size: 9px;
                 font-weight: bold;
-            ">OFF</button>
+            ">${isViewingHistoricalData ? 'ON' : 'OFF'}</button>
         `;
         document.body.appendChild(refreshIndicator);
         
@@ -355,19 +394,40 @@
                     if (breaksCell) {
                         if (agent.breaks && agent.breaks.length > 0) {
                             let breaksHtml = '<div class="d-flex flex-column gap-1">';
-                            agent.breaks.forEach(brk => {
+                            agent.breaks.forEach((brk, index) => {
                                 const activeClass = brk.is_active ? 'text-primary fw-bold' : 'text-muted';
+                                const hiddenClass = index >= 5 ? 'd-none' : '';
                                 const endText = brk.end ? `- ${brk.end} (${brk.duration}m)` : `- Now (${brk.duration}m)`;
                                 breaksHtml += `
-                                    <small class="${activeClass}">
+                                    <small class="break-item-${agent.id} ${hiddenClass} ${activeClass}">
                                         <i class="fas fa-clock fa-xs"></i> 
                                         ${brk.start} ${endText}
                                     </small>
                                 `;
                             });
+                            
+                            // Add show more button if more than 5 breaks
+                            if (agent.breaks.length > 5) {
+                                breaksHtml += `
+                                    <button class="btn btn-link btn-sm p-0 text-primary" data-agent-id="${agent.id}" data-total="${agent.breaks.length}" onclick="toggleBreaks(${agent.id}, this)">
+                                        <i class="fas fa-chevron-down"></i> Show more (${agent.breaks.length - 5} more)
+                                    </button>
+                                `;
+                            }
+                            // Format total break time
+                            const totalMins = agent.total_break_minutes;
+                            let totalFormatted;
+                            if (totalMins >= 60) {
+                                const hours = Math.floor(totalMins / 60);
+                                const mins = totalMins % 60;
+                                totalFormatted = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                            } else {
+                                totalFormatted = `${totalMins}m`;
+                            }
+                            
                             breaksHtml += `
                                 <div class="border-top mt-1 pt-1">
-                                    <small class="fw-bold">Total: ${agent.total_break_minutes}m</small>
+                                    <small class="fw-bold">Total: ${totalFormatted}</small>
                                 </div>
                             </div>`;
                             breaksCell.innerHTML = breaksHtml;
@@ -420,13 +480,23 @@
         }
         
         function startActivityUpdates() {
+            // Don't start if viewing historical data
+            if (isViewingHistoricalData && !updatesEnabled) {
+                console.log('📊 Viewing historical data - Live updates disabled');
+                return;
+            }
+            
             if (activityUpdateInterval) clearInterval(activityUpdateInterval);
             fetchAgentActivity(); // Initial fetch
             activityUpdateInterval = setInterval(fetchAgentActivity, 5000); // Poll every 5 seconds
         }
         
-        // Start on page load
-        startActivityUpdates();
+        // Start on page load (only if not viewing historical data)
+        if (!isViewingHistoricalData) {
+            startActivityUpdates();
+        } else {
+            console.log('📊 Historical data mode - Live updates disabled for dates:', dateFrom, 'to', dateTo);
+        }
     });
 </script>
 {% endblock %}

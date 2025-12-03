@@ -418,6 +418,63 @@ class UserViewSet(viewsets.ModelViewSet):
                 'error': f'حدث خطأ أثناء تغيير كلمة المرور: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=True, methods=['delete'], url_path='delete')
+    def delete_account(self, request, pk=None):
+        """
+        حذف حساب المستخدم (Admin only)
+        DELETE /api/users/{id}/delete/
+        """
+        # التحقق من أن المستخدم الحالي هو admin
+        if request.user.role != 'admin':
+            return Response({
+                'success': False,
+                'error': 'Only admin can delete accounts'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        user = self.get_object()
+
+        # منع حذف الحساب الخاص
+        if user.id == request.user.id:
+            return Response({
+                'success': False,
+                'error': 'Cannot delete your own account'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            username = user.username
+            user_id = user.id
+
+            # حذف الـ Agent المرتبط إذا وجد
+            if hasattr(user, 'agent'):
+                user.agent.delete()
+
+            # حذف المستخدم
+            user.delete()
+
+            # تسجيل النشاط
+            try:
+                log_activity(
+                    user=request.user,
+                    action='delete',
+                    entity_type='user',
+                    entity_id=user_id,
+                    new_value=f'تم حذف المستخدم {username}',
+                    request=request
+                )
+            except:
+                pass
+
+            return Response({
+                'success': True,
+                'message': f'Account "{username}" deleted successfully'
+            })
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': f'Error deleting account: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class AgentViewSet(viewsets.ModelViewSet):
     """

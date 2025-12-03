@@ -842,6 +842,9 @@
             <!-- Alias for conversations.js compatibility -->
             <div class="d-none" id="conversationHeader"></div>
             <div class="chat-header-left">
+                <button class="btn btn-sm btn-light me-2" onclick="closeChat()" title="Back">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
                 <button class="btn btn-sm btn-warning" onclick="showTransferModal()" title="{% trans 'تحويل المحادثة' %}">
                     <i class="fas fa-exchange-alt"></i> {% trans "تحويل" %}
                 </button>
@@ -1313,6 +1316,47 @@
                 }, 2000);
             }
         }, 500); // Wait for messages to render
+    }
+
+    // Close chat and return to main list
+    function closeChat() {
+        // Stop polling for messages
+        if (messagesPolling) {
+            clearInterval(messagesPolling);
+            messagesPolling = null;
+        }
+
+        // Clear current customer
+        currentCustomerId = null;
+        currentCustomer = null;
+
+        // Remove active state from all customer items
+        document.querySelectorAll('.customer-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Hide chat components
+        const chatHeader = document.getElementById('chatHeader');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInputContainer = document.getElementById('messageInputContainer');
+
+        if (chatHeader) chatHeader.classList.add('d-none');
+        if (messagesContainer) messagesContainer.classList.add('d-none');
+        if (messageInputContainer) messageInputContainer.classList.add('d-none');
+
+        // Show empty state
+        const emptyState = document.getElementById('emptyState');
+        if (emptyState) {
+            emptyState.classList.remove('d-none');
+        }
+
+        // Clear messages area
+        const messagesArea = document.getElementById('messagesArea');
+        if (messagesArea) {
+            messagesArea.innerHTML = '';
+        }
+
+        console.log('✅ Chat closed, returned to main list');
     }
 
     async function loadCustomerMessages(customerId) {

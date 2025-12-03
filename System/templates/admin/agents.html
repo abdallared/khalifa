@@ -147,6 +147,11 @@
                                 <button class="btn btn-sm btn-outline-danger" onclick="resetPassword({{ agent.id }}, '{{ agent.full_name|default:agent.username }}')" title="Reset Password">
                                     <i class="fas fa-key"></i> Password
                                 </button>
+                                {% if user.role == 'admin' %}
+                                <button class="btn btn-sm btn-delete-orange" onclick="deleteAccount({{ agent.id }}, '{{ agent.full_name|default:agent.username }}')" title="Delete Account">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -374,6 +379,19 @@
         width: 45px;
         height: 45px;
         font-size: 1.125rem;
+    }
+    
+    /* Delete Button Orange Style */
+    .btn-delete-orange {
+        color: #FF6B35;
+        border-color: #FF6B35;
+        background-color: transparent;
+    }
+    
+    .btn-delete-orange:hover {
+        color: white;
+        background-color: #FF6B35;
+        border-color: #FF6B35;
     }
     
     /* Dropdown Styles */
@@ -1344,5 +1362,39 @@
         // Start on page load
         startStatusUpdates();
     });
+
+    // Delete Account Function
+    async function deleteAccount(userId, userName) {
+        if (!confirm(`Are you sure you want to delete the account "${userName}"?\n\nThis action cannot be undone!`)) {
+            return;
+        }
+        
+        // Double confirmation for safety
+        if (!confirm(`FINAL WARNING: This will permanently delete "${userName}" and all associated data. Continue?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/users/${userId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': khalifaPharmacy.getCookie('csrftoken')
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                khalifaPharmacy.showToast(data.message || 'Account deleted successfully', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                khalifaPharmacy.showToast(data.error || 'Error deleting account', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            khalifaPharmacy.showToast('Server connection error', 'error');
+        }
+    }
 </script>
 {% endblock %}

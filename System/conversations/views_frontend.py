@@ -494,12 +494,22 @@ def admin_agent_management(request):
                     'is_active': True
                 })
             
+        total_minutes = sum(b['duration'] for b in breaks)
+        # Format total break time (e.g., "1h 30m" or "45m")
+        if total_minutes >= 60:
+            hours = total_minutes // 60
+            mins = total_minutes % 60
+            total_formatted = f"{hours}h {mins}m" if mins > 0 else f"{hours}h"
+        else:
+            total_formatted = f"{total_minutes}m"
+            
         agents_data.append({
             'agent': agent,
             'login_time': login_time,
             'logout_time': logout_time,
             'breaks': breaks,
-            'total_break_minutes': sum(b['duration'] for b in breaks)
+            'total_break_minutes': total_minutes,
+            'total_break_formatted': total_formatted
         })
     
     # Handle Export
